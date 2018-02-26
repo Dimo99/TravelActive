@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Api.ION\Api.ION.csproj" />
+    <ProjectReference Include="..\Api.Query\Api.Query.csproj" />
     <ProjectReference Include="..\TravelActive.Common\TravelActive.Common.csproj" />
   </ItemGroup>
 

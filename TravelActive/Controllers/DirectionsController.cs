@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Api.ION;
+using Api.Query;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TravelActive.Common.Utilities;
 using TravelActive.Models.BindingModels;
 using TravelActive.Models.Entities;
 using TravelActive.Models.ViewModels;
@@ -25,14 +28,26 @@ namespace TravelActive.Controllers
             this.bicycleDirectionsService = bicycleDirectionsService;
             this.busDirectionsService = busDirectionsService;
         }
-
+        [HttpGet(Name = RouteNames.DirectionsRoot)]
+        public IActionResult Root()
+        {
+            var responese = new DirectionsRootResponse();
+            responese.BusQueryForm = FormHelper.DirectionsQuery<CoordinatesBindingModel>(
+                LinkGenerator.ToForm(RouteNames.BusQuery, null, LinkGenerator.GetMethod, Form.QueryRelation));
+            responese.BicycleQueryForm = FormHelper.DirectionsQuery<CoordinatesBindingModel>(
+                LinkGenerator.ToForm(RouteNames.CycleQuery, null, LinkGenerator.GetMethod, Form.QueryRelation));
+            responese.Self = LinkGenerator.To(RouteNames.DirectionsRoot);
+            responese.BicycleStop = FormMetadata.FromModel(new BicycleStopBindingModel(),
+                LinkGenerator.ToForm(RouteNames.PostCycleStop, null, LinkGenerator.PostMethod, Form.CreateRelation));
+            return Ok(responese);
+        }
         [HttpPost("bus")]
         public IActionResult Bus()
         {
             throw new NotImplementedException();
         }
 
-        [HttpPost("cycle")]
+        [HttpPost("cycle", Name = RouteNames.PostCycleStop)]
         public async Task<IActionResult> Cycle([FromBody] BicycleStopBindingModel bicycleStop)
         {
             if (!ModelState.IsValid)
@@ -44,7 +59,7 @@ namespace TravelActive.Controllers
             return Ok();
         }
 
-        [HttpGet("bus")]
+        [HttpGet("bus", Name = RouteNames.BusQuery)]
         public async Task<IActionResult> Bus([FromQuery] CoordinatesBindingModel cbm)
         {
             if (!ModelState.IsValid)
@@ -53,10 +68,15 @@ namespace TravelActive.Controllers
             }
             Coordinates coordinates = mapper.Map<Coordinates>(cbm);
             List<Directions> directions = await busDirectionsService.BusAlgorithm(coordinates);
-            return Ok(directions);
+            Collection<Directions> collection = new Collection<Directions>()
+            {
+                Value = directions.ToArray()
+            };
+
+            return Ok(collection);
         }
 
-        [HttpGet("cycle")]
+        [HttpGet("cycle", Name = RouteNames.CycleQuery)]
         public async Task<IActionResult> Cycle([FromQuery] CoordinatesBindingModel cbm)
         {
             if (!ModelState.IsValid)
@@ -71,11 +91,11 @@ namespace TravelActive.Controllers
                 await bicycleDirectionsService.FindNEarestBicycleStop(coordinates.EndPoint);
             Directions directionsToNearestStation =
                 await bicycleDirectionsService.GetDirectionsByFoot(coordinates.StartingPoint, nearestBicycleStation.LatLng);
-            Directions directionsBetweenStations = 
-                await bicycleDirectionsService.GetDirectionsBicycle(nearestBicycleStation.LatLng,nearestBicycleStationToLocation.LatLng);
+            Directions directionsBetweenStations =
+                await bicycleDirectionsService.GetDirectionsBicycle(nearestBicycleStation.LatLng, nearestBicycleStationToLocation.LatLng);
             Directions directionsToTheEnd =
                 await bicycleDirectionsService.GetDirectionsByFoot(nearestBicycleStationToLocation.LatLng, coordinates.EndPoint);
-            Directions finalBycicleDirections =  bicycleDirectionsService.SumDirections(directionsToNearestStation, directionsBetweenStations,
+            Directions finalBycicleDirections = bicycleDirectionsService.SumDirections(directionsToNearestStation, directionsBetweenStations,
                 directionsToTheEnd);
             Directions directionsByFoot =
                 await bicycleDirectionsService.GetDirectionsByFoot(coordinates.StartingPoint, coordinates.EndPoint);

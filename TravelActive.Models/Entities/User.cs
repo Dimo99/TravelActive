@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using TravelActive.Common.Mapping;
-using TravelActive.Models.Forms;
+using TravelActive.Models.BindingModels;
 
 namespace TravelActive.Models.Entities
 {

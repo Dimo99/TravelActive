@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using TravelActive.Common.Extensions;
 using TravelActive.Common.Utilities;
 using TravelActive.Data;
-using TravelActive.Models;
 using TravelActive.Models.Entities;
 using TravelActive.Models.ViewModels;
 
@@ -89,7 +88,7 @@ namespace TravelActive.Services
                 }
                 var lastStop = path[path.Count - 1];
                 Directions directionsToDestination = await GetDirectionsByFoot(Context.BusStops
-                    .ProjectTo<BusStopViewModel>().First(x => x.Id == firstStop.InitialStopId).LatLng, coordinates.EndPoint);
+                    .ProjectTo<BusStopViewModel>().First(x => x.Id == lastStop.DestStopId).LatLng, coordinates.EndPoint);
                 sum += directionsToDestination;
                 toReturn.Add(sum);
             }
@@ -100,7 +99,7 @@ namespace TravelActive.Services
         private string GetWayPoints(StopAccessibleViewModel item)
         {
             string waypoints = "";
-            List<BusStop> busStops = Context.StopsOrdered.Where(x => x.BusId == item.BusId).Select(x => x.BusStop).OrderBy(x => x.Id).ToList();
+            List<BusStop> busStops = Context.StopsOrdered.Where(x => x.BusId == item.BusId).OrderBy(x => x.Id).Select(x => x.BusStop).ToList();
             bool flag = false;
             foreach (var busStop in busStops)
             {
@@ -109,11 +108,12 @@ namespace TravelActive.Services
                     flag = true;
                 }
 
-                if (busStop.Id == item.DestStopId)
+                if (busStop.Id == item.DestStopId && flag)
                 {
 
                     waypoints += $"{busStop.Longitude},{busStop.Latitude}";
                     flag = false;
+                    break;
                 }
                 if (flag)
                 {

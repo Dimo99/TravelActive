@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Api.ION;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,6 @@ using TravelActive.Common.Utilities;
 using TravelActive.Filters;
 using TravelActive.Models.BindingModels;
 using TravelActive.Models.Entities;
-using TravelActive.Models.Forms;
 using TravelActive.Models.ViewModels;
 using TravelActive.Services;
 
@@ -29,6 +29,20 @@ namespace TravelActive.Controllers
             this.emailService = emailService;
         }
 
+        [HttpGet(Name = RouteNames.UsersRoot)]
+        public IActionResult Root()
+        {
+            var response = new UsersRootResponse()
+            {
+                Self = LinkGenerator.To(RouteNames.UsersRoot),
+                UserRegister = FormMetadata.FromModel(new RegisterForm(), LinkGenerator.ToForm(RouteNames.UsersRegister,null,LinkGenerator.PostMethod,Form.CreateRelation)),
+                UserMe = LinkGenerator.To(RouteNames.UsersMe),
+                ChangePassword = FormMetadata.FromModel(new ChangePasswordBindingModel(), LinkGenerator.ToForm(RouteNames.ChangePassword,null,LinkGenerator.PostMethod,Form.EditRelation)),
+                ForgotenPassword = FormMetadata.FromModel(new ForgotenPasswordBindingModel(),LinkGenerator.ToForm(RouteNames.SendPasswordRecovory,null,LinkGenerator.PostMethod,Form.Relation)),
+                ResetPasswordWithToken = FormMetadata.FromModel(new ResetPasswordBindingModel(), LinkGenerator.ToForm(RouteNames.ResetPassword,null,LinkGenerator.PostMethod,Form.Relation))
+            };
+            return Ok(response);
+        }
         [HttpPost(Name = RouteNames.UsersRegister)]
         public async Task<IActionResult> RegisterUserAsync([FromBody] RegisterForm registerForm, CancellationToken ct)
         {
@@ -84,7 +98,7 @@ namespace TravelActive.Controllers
         [Authorize]
         [ValidateToken]
         [ValidateEmailConfirmed]
-        [HttpPost("changepassword")]
+        [HttpPost("changepassword",Name = RouteNames.ChangePassword)]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordBindingModel cpbm)
         {
             var user = await userManager.FindByIdAsync(User.GetId());

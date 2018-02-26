@@ -39,7 +39,6 @@ namespace TravelActive
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider provider)
         {
-            InitialDb(provider);
             app.UseStaticFiles();
             app.UseMvc();
         }

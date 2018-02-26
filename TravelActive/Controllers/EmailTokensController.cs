@@ -10,11 +10,11 @@ using TravelActive.Services;
 namespace TravelActive.Controllers
 {
     [Authorize]
-    public class EmailTokenController : Controller
+    public class EmailTokensController : Controller
     {
         private readonly UserService userService;
         private readonly EmailService emailService;
-        public EmailTokenController(UserService userService, EmailService emailService)
+        public EmailTokensController(UserService userService, EmailService emailService)
         {
             this.userService = userService;
             this.emailService = emailService;

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Api.ION;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,18 +13,30 @@ using TravelActive.Services;
 namespace TravelActive.Controllers
 {
     [Route("/[controller]")]
-    public class TokenController : Controller
+    public class TokensController : Controller
     {
         private readonly TokenService tokenService;
         private readonly SignInManager<User> signInManager;
         private readonly UserManager<User> userManager;
-        public TokenController(TokenService tokenService, SignInManager<User> signInManager, UserManager<User> userManager)
+        public TokensController(TokenService tokenService, SignInManager<User> signInManager, UserManager<User> userManager)
         {
             this.tokenService = tokenService;
             this.signInManager = signInManager;
             this.userManager = userManager;
         }
 
+        [HttpGet(Name = RouteNames.TokenRoot)]
+        public IActionResult TokenRoot()
+        {
+            var response = new TokenRootResponse()
+            {
+                Self = LinkGenerator.To(RouteNames.TokenRoot),
+                LoginForm = FormMetadata.FromModel(new LoginBindingModel(), LinkGenerator.ToForm(RouteNames.TokenLogin,null,LinkGenerator.PostMethod,Form.Relation)),
+                ConfirmEmailForm = FormMetadata.FromModel(new EmailConfirmationBindingModel(), LinkGenerator.ToForm(RouteNames.ConfirmEmailPost,null,LinkGenerator.PostMethod,Form.Relation)),
+                GetConfirmToken = LinkGenerator.To(RouteNames.ConfirmEmailGet)
+            };
+            return Ok(response);
+        }
         [HttpPost(Name = RouteNames.TokenLogin)]
         public async Task<IActionResult> LoginUserAsync([FromBody]LoginBindingModel lbm)
         {

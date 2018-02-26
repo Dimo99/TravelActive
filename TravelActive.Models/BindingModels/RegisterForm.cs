@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Api.ION;
 
-namespace TravelActive.Models.Forms
+namespace TravelActive.Models.BindingModels
 {
     public class RegisterForm
     {

@@ -7,8 +7,8 @@ using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using TravelActive.Common.Extensions;
 using TravelActive.Data;
+using TravelActive.Models.BindingModels;
 using TravelActive.Models.Entities;
-using TravelActive.Models.Forms;
 using TravelActive.Models.ViewModels;
 
 namespace TravelActive.Services
