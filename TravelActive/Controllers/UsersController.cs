@@ -50,7 +50,7 @@ namespace TravelActive.Controllers
             var (succeded, errors) = await userService.CreateUserAsync(registerForm, ct);
             if (succeded)
             {
-                return Created(Url.Link(nameof(GetMeAsync),null),null);
+                return Created(Url.Link(RouteNames.UsersMe,null),null);
             }
 
             return BadRequest(new ApiError(errors.First()));

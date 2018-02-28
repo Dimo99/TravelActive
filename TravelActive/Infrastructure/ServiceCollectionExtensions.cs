@@ -27,7 +27,7 @@ namespace TravelActive.Infrastructure
         public static IServiceCollection AddDatabaseConfigurations(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<TravelActiveContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                options.UseMySql(configuration.GetConnectionString("MySqlConnection")));
             return services;
         }
 

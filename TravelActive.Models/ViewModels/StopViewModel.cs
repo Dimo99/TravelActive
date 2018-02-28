@@ -1,9 +1,12 @@
-﻿using TravelActive.Models.Entities;
+﻿using Api.ION;
+using Api.Query.CustomAttributes.Searchable;
+using TravelActive.Models.Entities;
 
 namespace TravelActive.Models.ViewModels
 {
-    public class StopViewModel
+    public class StopViewModel : Resource
     {
+        [Searchable]
         public string StopName { get; set; }
         public LatLng LatLng { get; set; }
         public override string ToString()

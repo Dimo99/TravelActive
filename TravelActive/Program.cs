@@ -1,5 +1,4 @@
-﻿using System.Net;
-using Microsoft.AspNetCore;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
 namespace TravelActive
@@ -13,10 +12,7 @@ namespace TravelActive
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>().UseKestrel(options =>
-                {
-                    options.Listen(IPAddress.Any,80);
-                })
+                .UseStartup<Startup>()
                 .Build();
     }
 }

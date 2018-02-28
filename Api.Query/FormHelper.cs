@@ -14,7 +14,7 @@ namespace Api.Query
     {
         public static Form FromResource<T>(Link self)
         {
-            var allProperties = typeof(T).GetTypeInfo().DeclaredProperties.ToArray();
+            var allProperties = typeof(T).GetTypeInfo().GetProperties().ToArray();
             var sortableProperties = allProperties
                 .Where(p => p.GetCustomAttributes<SortableAttribute>().Any()).ToArray();
             var searchableProperties = allProperties

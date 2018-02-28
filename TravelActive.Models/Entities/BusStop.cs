@@ -1,6 +1,9 @@
-﻿namespace TravelActive.Models.Entities
+﻿using TravelActive.Common.Mapping;
+using TravelActive.Models.BindingModels;
+
+namespace TravelActive.Models.Entities
 {
-    public class BusStop
+    public class BusStop : IMapFrom<BusStopBindingModel>
     {
         public int Id { get; set; }
         public string StopName { get; set; }

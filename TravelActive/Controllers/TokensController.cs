@@ -18,11 +18,13 @@ namespace TravelActive.Controllers
         private readonly TokenService tokenService;
         private readonly SignInManager<User> signInManager;
         private readonly UserManager<User> userManager;
-        public TokensController(TokenService tokenService, SignInManager<User> signInManager, UserManager<User> userManager)
+        private readonly UserService userService;
+        public TokensController(TokenService tokenService, SignInManager<User> signInManager, UserManager<User> userManager, UserService userService)
         {
             this.tokenService = tokenService;
             this.signInManager = signInManager;
             this.userManager = userManager;
+            this.userService = userService;
         }
 
         [HttpGet(Name = RouteNames.TokenRoot)]
@@ -37,6 +39,7 @@ namespace TravelActive.Controllers
             };
             return Ok(response);
         }
+
         [HttpPost(Name = RouteNames.TokenLogin)]
         public async Task<IActionResult> LoginUserAsync([FromBody]LoginBindingModel lbm)
         {
@@ -51,7 +54,7 @@ namespace TravelActive.Controllers
             var accessToken = tokenService.GetAccessTokenAsync(user);
             return Ok(accessToken);
         }
-
+        
         [Authorize]
         [HttpDelete]
         [ValidateToken]

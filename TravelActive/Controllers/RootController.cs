@@ -16,7 +16,9 @@ namespace TravelActive.Controllers
                 Self = LinkGenerator.To(RouteNames.Root),
                 Directions = LinkGenerator.To(RouteNames.DirectionsRoot),
                 Users = LinkGenerator.To(RouteNames.UsersRoot),
-                Tokens = LinkGenerator.To(RouteNames.TokenRoot)
+                Tokens = LinkGenerator.To(RouteNames.TokenRoot),
+                BusStops = LinkGenerator.ToCollection(RouteNames.ListBusStops),
+                Buses = LinkGenerator.ToCollection(RouteNames.Buses)
             };
             
             return Ok(response);

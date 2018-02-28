@@ -20,7 +20,7 @@ namespace Api.ION
 
             return new Link()
             {
-                Href = urlHelper.Link(original.RouteName, original.RouteValues),
+                Href = urlHelper.Link(original.RouteName, original.RouteValues)?.ToLower(),
                 Method = original.Method,
                 Relations = original.Relations
             };

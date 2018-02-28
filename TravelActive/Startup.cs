@@ -39,8 +39,53 @@ namespace TravelActive
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider provider)
         {
+            AddCycleStops(provider);
             app.UseStaticFiles();
             app.UseMvc();
+        }
+
+        private void AddCycleStops(IServiceProvider provider)
+        {
+            var context = provider.GetService<TravelActiveContext>();
+            if (context.BicycleStops.Any())
+            {
+                return;
+            }
+            City city = new City()
+            {
+                Name = "Бургас"
+            };
+            context.Add(city);
+            context.SaveChanges();
+            Dictionary<string, LatLng> bicycleStops = new Dictionary<string, LatLng>()
+            {
+                {"Морска Гара",new LatLng(42.484761,27.482789) },
+                { "Автогара Юг",new LatLng(42.490604,27.474128)},
+                { "Казино",new LatLng(42.494932,27.482425)},
+                {"Младежки културен център",new LatLng(42.496227,27.465877) },
+                {"Пантеон",new LatLng(42.501500,27.482164) },
+                {"Капани",new LatLng(42.506841,27.483571)},
+                {"БСУ",new LatLng(42.503294,27.468482)},
+                {"Бойчо Брънзов",new LatLng(42.514876,27.467595) },
+                {"Мол Галерия (Славейков)",new LatLng(42.513546,27.453937) },
+                {"\"Никола Петков\" (Изгрев)",new LatLng(42.519424,27.464046) },
+                {"Парк Славейков",new LatLng(42.519989,27.451840) },
+                {"С.К. \"Славейков\"",new LatLng(42.522353,27.447063) },
+                {"Парк \"Изгрев\" (Велека)",new LatLng(42.523105,27.461618) },
+                {"\"Двете брези\" (Зорница)" ,new LatLng(42.519392,27.467874)}
+            };
+            foreach (var stop in bicycleStops)
+            {
+                context.BicycleStops.Add(new BicycleStop()
+                {
+                    StopName = stop.Key,
+                    CityId = city.Id,
+                    Latitude = stop.Value.Latitude.ToString(),
+                    Longitude = stop.Value.Longitude.ToString()
+                });
+            }
+
+            context.SaveChanges();
         }
 
         private void TestDb(IServiceProvider provider)

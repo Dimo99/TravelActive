@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Api.ION;
 using Api.Query;
@@ -31,20 +30,17 @@ namespace TravelActive.Controllers
         [HttpGet(Name = RouteNames.DirectionsRoot)]
         public IActionResult Root()
         {
-            var responese = new DirectionsRootResponse();
-            responese.BusQueryForm = FormHelper.DirectionsQuery<CoordinatesBindingModel>(
-                LinkGenerator.ToForm(RouteNames.BusQuery, null, LinkGenerator.GetMethod, Form.QueryRelation));
-            responese.BicycleQueryForm = FormHelper.DirectionsQuery<CoordinatesBindingModel>(
-                LinkGenerator.ToForm(RouteNames.CycleQuery, null, LinkGenerator.GetMethod, Form.QueryRelation));
-            responese.Self = LinkGenerator.To(RouteNames.DirectionsRoot);
-            responese.BicycleStop = FormMetadata.FromModel(new BicycleStopBindingModel(),
-                LinkGenerator.ToForm(RouteNames.PostCycleStop, null, LinkGenerator.PostMethod, Form.CreateRelation));
+            var responese = new DirectionsRootResponse
+            {
+                BusQueryForm = FormHelper.DirectionsQuery<CoordinatesBindingModel>(
+                    LinkGenerator.ToForm(RouteNames.BusQuery, null, LinkGenerator.GetMethod, Form.QueryRelation)),
+                BicycleQueryForm = FormHelper.DirectionsQuery<CoordinatesBindingModel>(
+                    LinkGenerator.ToForm(RouteNames.CycleQuery, null, LinkGenerator.GetMethod, Form.QueryRelation)),
+                Self = LinkGenerator.To(RouteNames.DirectionsRoot),
+                BicycleStop = FormMetadata.FromModel(new BicycleStopBindingModel(),
+                    LinkGenerator.ToForm(RouteNames.PostCycleStop, null, LinkGenerator.PostMethod, Form.CreateRelation))
+            };
             return Ok(responese);
-        }
-        [HttpPost("bus")]
-        public IActionResult Bus()
-        {
-            throw new NotImplementedException();
         }
 
         [HttpPost("cycle", Name = RouteNames.PostCycleStop)]

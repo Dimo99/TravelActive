@@ -10,6 +10,7 @@ using TravelActive.Services;
 namespace TravelActive.Controllers
 {
     [Authorize]
+    [Route("/[controller]")]
     public class EmailTokensController : Controller
     {
         private readonly UserService userService;

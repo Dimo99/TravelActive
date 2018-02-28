@@ -2,20 +2,30 @@
 {
     public static class RouteNames
     {
-        public const string TokenLogin = "LoginUserAsync";
-        public const string ConfirmEmailPost = "ConfirmEmailPost";
-        public const string ResetPassword = "ResetPasswordAsync";
-        public const string SendPasswordRecovory = "SendPasswordRecovoryAsync";
-        public const string UsersMe = "GetMeAsync";
-        public const string UsersRegister = "RegisterUserAsync";
-        public const string ConfirmEmailGet = "ConfirmEmailAsyncGet";
-        public const string BusQuery = "BusQuery";
-        public const string CycleQuery = "CycleQuery";
-        public const string Root = "GetRoot";
-        public const string DirectionsRoot = "DirectionsRoot";
-        public const string PostCycleStop = "PostCycleStop";
-        public const string UsersRoot = "UsersRoot";
-        public const string ChangePassword = "ChangePassword";
-        public const string TokenRoot = "TokenRoot";
+        public const string TokenLogin = nameof(TokenLogin);
+        public const string ConfirmEmailPost = nameof(ConfirmEmailPost);
+        public const string ResetPassword = nameof(ResetPassword);
+        public const string SendPasswordRecovory = nameof(SendPasswordRecovory);
+        public const string UsersMe = nameof(UsersMe);
+        public const string UsersRegister = nameof(UsersRegister);
+        public const string ConfirmEmailGet = nameof(ConfirmEmailGet);
+        public const string BusQuery = nameof(BusQuery);
+        public const string CycleQuery = nameof(CycleQuery);
+        public const string Root = nameof(Root);
+        public const string DirectionsRoot = nameof(DirectionsRoot);
+        public const string PostCycleStop = nameof(PostCycleStop);
+        public const string UsersRoot = nameof(UsersRoot);
+        public const string ChangePassword = nameof(ChangePassword);
+        public const string TokenRoot = nameof(TokenRoot);
+        public const string PostBus = nameof(PostBus);
+        public const string PostBusStop = nameof(PostBusStop);
+        public const string ListBusStops = nameof(ListBusStops);
+        public const string Bus = nameof(Bus);
+        public const string Buses = nameof(Buses);
+        public const string BusStop = nameof(BusStop);
+        public const string DepartureTimes = nameof(DepartureTimes);
+        public const string ComplexBus = nameof(ComplexBus);
+        public const string StopSequence = nameof(StopSequence);
+        public const string BusStopsRoot = nameof(BusStopsRoot);
     }
 }
