@@ -6,7 +6,7 @@ namespace TravelActive.Models.ViewModels
 {
     public class StopViewModel : Resource
     {
-        [Searchable]
+        [StringSearchable]
         public string StopName { get; set; }
         public LatLng LatLng { get; set; }
         public override string ToString()

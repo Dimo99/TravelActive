@@ -85,7 +85,7 @@ namespace TravelActive.Services
             await Context.SaveChangesAsync();
             return bus.Id;
         }
-
+        
         public Task<List<BusStopViewModel>> GetBusStops(int id)
         {
             var busStops = Context.StopsOrdered.Include(x => x.BusStop).ProjectTo<BusStopViewModel>().ToListAsync();

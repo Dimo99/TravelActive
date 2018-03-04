@@ -46,7 +46,7 @@ namespace Api.Query.Search
 
         private static IEnumerable<SearchTerm> GetTermsFromModel()
         {
-            return typeof(T).GetTypeInfo().DeclaredProperties
+            return typeof(T).GetTypeInfo().GetProperties()
                 .Where(p => p.GetCustomAttributes<SearchableAttribute>().Any())
                 .Select(p => new SearchTerm()
                 {

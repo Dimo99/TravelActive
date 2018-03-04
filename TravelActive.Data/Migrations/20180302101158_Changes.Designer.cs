@@ -11,8 +11,8 @@ using TravelActive.Data;
 namespace TravelActive.Data.Migrations
 {
     [DbContext(typeof(TravelActiveContext))]
-    [Migration("20180227083440_First")]
-    partial class First
+    [Migration("20180302101158_Changes")]
+    partial class Changes
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -233,29 +233,25 @@ namespace TravelActive.Data.Migrations
 
                     b.HasIndex("FriendId");
 
-                    b.ToTable("Friends");
+                    b.ToTable("Friend");
                 });
 
-            modelBuilder.Entity("TravelActive.Models.Entities.FriendRequest", b =>
+            modelBuilder.Entity("TravelActive.Models.Entities.Picture", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<bool>("Accepted");
+                    b.Property<string>("MediaType");
 
-                    b.Property<DateTime>("RequestTime");
+                    b.Property<string>("Name");
 
-                    b.Property<string>("RequestedToId");
+                    b.Property<string>("Type");
 
-                    b.Property<string>("RequstedById");
+                    b.Property<string>("Value");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RequestedToId");
-
-                    b.HasIndex("RequstedById");
-
-                    b.ToTable("FriendRequests");
+                    b.ToTable("Pictures");
                 });
 
             modelBuilder.Entity("TravelActive.Models.Entities.StopAccessibility", b =>
@@ -335,7 +331,7 @@ namespace TravelActive.Data.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed");
 
-                    b.Property<string>("PictureUrl");
+                    b.Property<int>("ProfilePictureId");
 
                     b.Property<int>("Rating");
 
@@ -354,6 +350,8 @@ namespace TravelActive.Data.Migrations
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasName("UserNameIndex");
+
+                    b.HasIndex("ProfilePictureId");
 
                     b.ToTable("AspNetUsers");
                 });
@@ -433,17 +431,6 @@ namespace TravelActive.Data.Migrations
                         .HasForeignKey("FriendId");
                 });
 
-            modelBuilder.Entity("TravelActive.Models.Entities.FriendRequest", b =>
-                {
-                    b.HasOne("TravelActive.Models.Entities.User", "RequestedTo")
-                        .WithMany("FriendRequests")
-                        .HasForeignKey("RequestedToId");
-
-                    b.HasOne("TravelActive.Models.Entities.User", "RequestedBy")
-                        .WithMany()
-                        .HasForeignKey("RequstedById");
-                });
-
             modelBuilder.Entity("TravelActive.Models.Entities.StopAccessibility", b =>
                 {
                     b.HasOne("TravelActive.Models.Entities.Bus", "Bus")
@@ -471,6 +458,14 @@ namespace TravelActive.Data.Migrations
                     b.HasOne("TravelActive.Models.Entities.BusStop", "BusStop")
                         .WithMany()
                         .HasForeignKey("BusStopId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("TravelActive.Models.Entities.User", b =>
+                {
+                    b.HasOne("TravelActive.Models.Entities.Picture", "ProfilePicture")
+                        .WithMany()
+                        .HasForeignKey("ProfilePictureId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618

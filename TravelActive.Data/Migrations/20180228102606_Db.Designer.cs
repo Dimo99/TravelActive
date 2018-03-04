@@ -2,14 +2,19 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage.Internal;
 using System;
+using TravelActive.Data;
 
 namespace TravelActive.Data.Migrations
 {
     [DbContext(typeof(TravelActiveContext))]
-    partial class TravelActiveContextModelSnapshot : ModelSnapshot
+    [Migration("20180228102606_Db")]
+    partial class Db
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -168,6 +173,8 @@ namespace TravelActive.Data.Migrations
 
                     b.Property<string>("BusName");
 
+                    b.Property<string>("SecretPassword");
+
                     b.HasKey("Id");
 
                     b.ToTable("Busses");
@@ -228,7 +235,29 @@ namespace TravelActive.Data.Migrations
 
                     b.HasIndex("FriendId");
 
-                    b.ToTable("Friend");
+                    b.ToTable("Friends");
+                });
+
+            modelBuilder.Entity("TravelActive.Models.Entities.FriendRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<bool>("Accepted");
+
+                    b.Property<DateTime>("RequestTime");
+
+                    b.Property<string>("RequestedToId");
+
+                    b.Property<string>("RequstedById");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestedToId");
+
+                    b.HasIndex("RequstedById");
+
+                    b.ToTable("FriendRequests");
                 });
 
             modelBuilder.Entity("TravelActive.Models.Entities.Picture", b =>
@@ -424,6 +453,17 @@ namespace TravelActive.Data.Migrations
                     b.HasOne("TravelActive.Models.Entities.User", "FriendUser")
                         .WithMany("Friends")
                         .HasForeignKey("FriendId");
+                });
+
+            modelBuilder.Entity("TravelActive.Models.Entities.FriendRequest", b =>
+                {
+                    b.HasOne("TravelActive.Models.Entities.User", "RequestedTo")
+                        .WithMany("FriendRequests")
+                        .HasForeignKey("RequestedToId");
+
+                    b.HasOne("TravelActive.Models.Entities.User", "RequestedBy")
+                        .WithMany()
+                        .HasForeignKey("RequstedById");
                 });
 
             modelBuilder.Entity("TravelActive.Models.Entities.StopAccessibility", b =>

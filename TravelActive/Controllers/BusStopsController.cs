@@ -29,7 +29,7 @@ namespace TravelActive.Controllers
             {
                 Self = LinkGenerator.ToCollection(RouteNames.ListBusStops),
                 Value = busStops.ToArray(),
-                BusStopSequence = LinkGenerator.ToCollection(RouteNames.StopSequence, new { busId = "exampleBusId" }),
+                BusStopSequence = LinkGenerator.ToCollection(RouteNames.StopSequence, new { parameter = "exampleBusId" }),
                 BusStopForm = FormMetadata.FromModel(new BusStopBindingModel(), LinkGenerator.ToForm(RouteNames.PostBusStop, null, LinkGenerator.PostMethod, Form.CreateRelation)),
                 BusStopByName = LinkGenerator.To(RouteNames.BusStop, new { name = "exampleBusStopName" }),
                 DepartureTimes = LinkGenerator.ToCollection(RouteNames.DepartureTimes, new { busId = "exampleBusId" }),
