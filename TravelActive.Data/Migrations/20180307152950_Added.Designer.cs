@@ -11,8 +11,8 @@ using TravelActive.Data;
 namespace TravelActive.Data.Migrations
 {
     [DbContext(typeof(TravelActiveContext))]
-    [Migration("20180228102606_Db")]
-    partial class Db
+    [Migration("20180307152950_Added")]
+    partial class Added
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -20,29 +20,6 @@ namespace TravelActive.Data.Migrations
             modelBuilder
                 .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
                 .HasAnnotation("ProductVersion", "2.0.1-rtm-125");
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken();
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(256);
-
-                    b.Property<string>("NormalizedName")
-                        .HasMaxLength(256);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedName")
-                        .IsUnique()
-                        .HasName("RoleNameIndex");
-
-                    b.ToTable("AspNetRoles");
-                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
@@ -113,6 +90,17 @@ namespace TravelActive.Data.Migrations
                     b.ToTable("AspNetUserRoles");
                 });
 
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+                {
+                    b.Property<Guid>("UserId");
+
+                    b.Property<Guid>("RoleId");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.ToTable("IdentityUserRole<Guid>");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId");
@@ -173,8 +161,6 @@ namespace TravelActive.Data.Migrations
 
                     b.Property<string>("BusName");
 
-                    b.Property<string>("SecretPassword");
-
                     b.HasKey("Id");
 
                     b.ToTable("Busses");
@@ -189,9 +175,12 @@ namespace TravelActive.Data.Migrations
 
                     b.Property<string>("Longitude");
 
-                    b.Property<string>("StopName");
+                    b.Property<string>("StopName")
+                        .IsRequired();
 
                     b.HasKey("Id");
+
+                    b.HasAlternateKey("StopName");
 
                     b.ToTable("BusStops");
                 });
@@ -222,42 +211,6 @@ namespace TravelActive.Data.Migrations
                     b.HasIndex("BusId");
 
                     b.ToTable("DepartureTimes");
-                });
-
-            modelBuilder.Entity("TravelActive.Models.Entities.Friend", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("FriendId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FriendId");
-
-                    b.ToTable("Friends");
-                });
-
-            modelBuilder.Entity("TravelActive.Models.Entities.FriendRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("Accepted");
-
-                    b.Property<DateTime>("RequestTime");
-
-                    b.Property<string>("RequestedToId");
-
-                    b.Property<string>("RequstedById");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RequestedToId");
-
-                    b.HasIndex("RequstedById");
-
-                    b.ToTable("FriendRequests");
                 });
 
             modelBuilder.Entity("TravelActive.Models.Entities.Picture", b =>
@@ -355,7 +308,7 @@ namespace TravelActive.Data.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed");
 
-                    b.Property<int>("ProfilePictureId");
+                    b.Property<int?>("ProfilePictureId");
 
                     b.Property<int>("Rating");
 
@@ -380,9 +333,32 @@ namespace TravelActive.Data.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
+            modelBuilder.Entity("TravelActive.Models.Entities.UserRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken();
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256);
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasName("RoleNameIndex");
+
+                    b.ToTable("AspNetRoles");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole")
+                    b.HasOne("TravelActive.Models.Entities.UserRole")
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -406,7 +382,7 @@ namespace TravelActive.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole")
+                    b.HasOne("TravelActive.Models.Entities.UserRole")
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -448,24 +424,6 @@ namespace TravelActive.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("TravelActive.Models.Entities.Friend", b =>
-                {
-                    b.HasOne("TravelActive.Models.Entities.User", "FriendUser")
-                        .WithMany("Friends")
-                        .HasForeignKey("FriendId");
-                });
-
-            modelBuilder.Entity("TravelActive.Models.Entities.FriendRequest", b =>
-                {
-                    b.HasOne("TravelActive.Models.Entities.User", "RequestedTo")
-                        .WithMany("FriendRequests")
-                        .HasForeignKey("RequestedToId");
-
-                    b.HasOne("TravelActive.Models.Entities.User", "RequestedBy")
-                        .WithMany()
-                        .HasForeignKey("RequstedById");
-                });
-
             modelBuilder.Entity("TravelActive.Models.Entities.StopAccessibility", b =>
                 {
                     b.HasOne("TravelActive.Models.Entities.Bus", "Bus")
@@ -500,8 +458,7 @@ namespace TravelActive.Data.Migrations
                 {
                     b.HasOne("TravelActive.Models.Entities.Picture", "ProfilePicture")
                         .WithMany()
-                        .HasForeignKey("ProfilePictureId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("ProfilePictureId");
                 });
 #pragma warning restore 612, 618
         }

@@ -12,7 +12,7 @@ namespace TravelActive.Models.Entities
     {
         public Picture ProfilePicture { get; set; }
         [ForeignKey("ProfilePicture")]
-        public int ProfilePictureId { get; set; }
+        public int? ProfilePictureId { get; set; }
         public List<BlockedTokens> BlockedTokens { get; set; } = new List<BlockedTokens>();
         [Range(minimum: 0, maximum: 5)]
         public int Rating { get; set; }

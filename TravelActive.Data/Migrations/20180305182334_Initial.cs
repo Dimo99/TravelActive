@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using System;
+using System.Collections.Generic;
 
 namespace TravelActive.Data.Migrations
 {
-    public partial class Db : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -28,8 +29,7 @@ namespace TravelActive.Data.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    BusName = table.Column<string>(nullable: true),
-                    SecretPassword = table.Column<string>(nullable: true)
+                    BusName = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -44,11 +44,12 @@ namespace TravelActive.Data.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Latitude = table.Column<string>(nullable: true),
                     Longitude = table.Column<string>(nullable: true),
-                    StopName = table.Column<string>(nullable: true)
+                    StopName = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BusStops", x => x.Id);
+                    table.UniqueConstraint("AK_BusStops_StopName", x => x.StopName);
                 });
 
             migrationBuilder.CreateTable(
@@ -344,53 +345,6 @@ namespace TravelActive.Data.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "FriendRequests",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Accepted = table.Column<bool>(nullable: false),
-                    RequestTime = table.Column<DateTime>(nullable: false),
-                    RequestedToId = table.Column<string>(nullable: true),
-                    RequstedById = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_FriendRequests", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_FriendRequests_AspNetUsers_RequestedToId",
-                        column: x => x.RequestedToId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_FriendRequests_AspNetUsers_RequstedById",
-                        column: x => x.RequstedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Friends",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    FriendId = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Friends", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Friends_AspNetUsers_FriendId",
-                        column: x => x.FriendId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -449,21 +403,6 @@ namespace TravelActive.Data.Migrations
                 column: "BusId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_FriendRequests_RequestedToId",
-                table: "FriendRequests",
-                column: "RequestedToId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_FriendRequests_RequstedById",
-                table: "FriendRequests",
-                column: "RequstedById");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Friends_FriendId",
-                table: "Friends",
-                column: "FriendId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_StopsAccessibility_BusId",
                 table: "StopsAccessibility",
                 column: "BusId");
@@ -514,12 +453,6 @@ namespace TravelActive.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "DepartureTimes");
-
-            migrationBuilder.DropTable(
-                name: "FriendRequests");
-
-            migrationBuilder.DropTable(
-                name: "Friends");
 
             migrationBuilder.DropTable(
                 name: "StopsAccessibility");

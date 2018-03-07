@@ -85,15 +85,15 @@ namespace TravelActive.Services
 
             return sum;
         }
-        protected List<Directions> SortDirections(params List<Directions>[] directions)
+        protected List<BusDirections> SortDirections(params List<BusDirections>[] directions)
         {
-            List<Directions> combinedDirections = new List<Directions>();
+            List<BusDirections> combinedDirections = new List<BusDirections>();
             foreach (var item in directions)
             {
                 combinedDirections.AddRange(item);
             }
 
-            return combinedDirections.OrderBy(x => x.Duration).ToList();
+            return combinedDirections.OrderBy(x => x.Directions.Sum(a => a.Duration)).ToList();
 
         }
         public int Compare(Directions first, Directions second)
@@ -121,7 +121,7 @@ namespace TravelActive.Services
             return 0;
         }
 
-        
+
         //public async Task<List<Directions>> BusAlgorithm(Coordinates coordinates)
         //{
         //    // maybe instead of two queries for buses we should make just one and use select from the list cause db queries cause overhead
@@ -149,8 +149,8 @@ namespace TravelActive.Services
         //        directions7, directions8, directions9);
         //}
 
-        
-        
+
+
         //private async Task<List<Directions>> GetDirectionsBuses(Coordinates coordinates, BusStopViewModel busStopLocation, BusStopViewModel busStopDestination)
         //{
         //    List<Bus> busesThatWork =

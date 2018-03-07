@@ -58,7 +58,7 @@ namespace TravelActive.Controllers
             };
             return Ok(busStops);
         }
-
+        [Authorize(Roles = "Moderator")]
         [HttpPost(Name = RouteNames.PostBusStop)]
         public IActionResult BusStop([FromBody] BusStopBindingModel busStopBindingModel)
         {
@@ -67,7 +67,7 @@ namespace TravelActive.Controllers
                 return BadRequest(new ApiError(ModelState));
             }
             busService.AddBusStop(busStopBindingModel);
-            return Created(Url.Link(RouteNames.ListBusStops, new{name = busStopBindingModel.StopName}), null);
+            return Ok();
         }
 
         [HttpGet("{name}", Name = RouteNames.BusStop)]

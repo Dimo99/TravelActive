@@ -11,8 +11,8 @@ using TravelActive.Data;
 namespace TravelActive.Data.Migrations
 {
     [DbContext(typeof(TravelActiveContext))]
-    [Migration("20180302101158_Changes")]
-    partial class Changes
+    [Migration("20180305182334_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -187,9 +187,12 @@ namespace TravelActive.Data.Migrations
 
                     b.Property<string>("Longitude");
 
-                    b.Property<string>("StopName");
+                    b.Property<string>("StopName")
+                        .IsRequired();
 
                     b.HasKey("Id");
+
+                    b.HasAlternateKey("StopName");
 
                     b.ToTable("BusStops");
                 });
@@ -220,20 +223,6 @@ namespace TravelActive.Data.Migrations
                     b.HasIndex("BusId");
 
                     b.ToTable("DepartureTimes");
-                });
-
-            modelBuilder.Entity("TravelActive.Models.Entities.Friend", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("FriendId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FriendId");
-
-                    b.ToTable("Friend");
                 });
 
             modelBuilder.Entity("TravelActive.Models.Entities.Picture", b =>
@@ -422,13 +411,6 @@ namespace TravelActive.Data.Migrations
                         .WithMany("BusStopTimes")
                         .HasForeignKey("BusId")
                         .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("TravelActive.Models.Entities.Friend", b =>
-                {
-                    b.HasOne("TravelActive.Models.Entities.User", "FriendUser")
-                        .WithMany("Friends")
-                        .HasForeignKey("FriendId");
                 });
 
             modelBuilder.Entity("TravelActive.Models.Entities.StopAccessibility", b =>

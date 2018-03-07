@@ -7,5 +7,6 @@
         public string Email { get; set; }
         public string EmailConfirmed { get; set; }
         public string Exparation { get; set; }
+        public string Roles { get; set; }
     }
 }

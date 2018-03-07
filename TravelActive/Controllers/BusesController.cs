@@ -33,7 +33,7 @@ namespace TravelActive.Controllers
             };
             return Ok(busesResponse);
         }
-
+        [Authorize(Roles = "Moderator")]
         [HttpPost(Name = RouteNames.PostBus)]
         public IActionResult Bus([FromBody] BusBindingModel busBindingModel)
         {
@@ -42,7 +42,7 @@ namespace TravelActive.Controllers
                 return BadRequest(ModelState);
             }
             var busId = busService.CreateBus(busBindingModel);
-            return Created(Url.Link(RouteNames.Bus, new { busId }), null);
+            return Ok();
         }
 
         [HttpGet("{busId}", Name = RouteNames.Bus)]

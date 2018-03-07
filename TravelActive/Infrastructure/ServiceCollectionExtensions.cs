@@ -39,7 +39,7 @@ namespace TravelActive.Infrastructure
                 opt.ClaimsIdentity.UserIdClaimType = Constants.Claims.Id;
                 opt.ClaimsIdentity.RoleClaimType = "Role";
             });
-            services.AddIdentity<User, IdentityRole>(options =>
+            services.AddIdentity<User, UserRole>(options =>
                 {
                     options.Password.RequireDigit = false;
                     options.Password.RequiredLength = 5;
@@ -132,9 +132,9 @@ namespace TravelActive.Infrastructure
             {
                 options.Filters.Add<LinkRewritingFilter>();
                 options.Filters.Add<JsonExceptionFilter>();
-                var jsonFormatter = options.OutputFormatters.OfType<JsonOutputFormatter>().Single();
-                options.OutputFormatters.Remove(jsonFormatter);
-                options.OutputFormatters.Add(new IonOutputFormater(jsonFormatter));
+                //var jsonFormatter = options.OutputFormatters.OfType<JsonOutputFormatter>().Single();
+                //options.OutputFormatters.Remove(jsonFormatter);
+                //options.OutputFormatters.Add(new IonOutputFormater(jsonFormatter));
             });
             return services;
         }

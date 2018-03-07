@@ -27,22 +27,31 @@ namespace TravelActive.Services
 
         private async Task<Directions> GetDirectionsCar(string waypoints)
         {
-            string url = $"{Constants.CarRouteUrl}{waypoints}";
-            return await GetDirections(url);
+            string[] tokens = waypoints.Split(';');
+            Directions sum = new Directions();
+            //Making multiple requests for better OSRM quality
+            for (int i = 0; i < tokens.Length - 1; i++)
+            {
+                string waypoint1 = tokens[i];
+                string waypoint2 = tokens[i + 1];
+                sum += await GetDirections($"{Constants.CarRouteUrl}{waypoint1};{waypoint2}");
+            }
+
+            return sum;
         }
         private async Task<List<BusStopViewModel>> BusStops()
         {
             return await Context.BusStops.ProjectTo<BusStopViewModel>().ToListAsync();
         }
-        public async Task<List<Directions>> BusAlgorithm(Coordinates coordinates)
+        public async Task<List<BusDirections>> BusAlgorithm(Coordinates coordinates)
         {
-            // maybe instead of two queries for buses we should make just one and use select from the list cause db queries cause overhead
-            // maybe LinkedList will be faster cause of the Remove of elements but lets leave like that for now
             List<BusStopViewModel> busStops = await BusStops();
             BusStopViewModel firstToLocation = FindNearestBusStopWithRemove(coordinates.StartingPoint, busStops);
             BusStopViewModel secondToLocation = FindNearestBusStopWithRemove(coordinates.StartingPoint, busStops);
             BusStopViewModel thirdToLocation = FindNearestBusStopWithRemove(coordinates.StartingPoint, busStops);
-            busStops.AddMany(firstToLocation, secondToLocation, thirdToLocation);
+            BusStopViewModel foutrhToLocation = FindNearestBusStopWithRemove(coordinates.StartingPoint, busStops);
+            BusStopViewModel fifthToLocation = FindNearestBusStopWithRemove(coordinates.StartingPoint, busStops);
+            busStops.AddMany(firstToLocation, secondToLocation, thirdToLocation, foutrhToLocation, fifthToLocation);
             BusStopViewModel firstToDestination = FindNearestBusStopWithRemove(coordinates.EndPoint, busStops);
             BusStopViewModel secondToDestination = FindNearestBusStopWithRemove(coordinates.EndPoint, busStops);
             BusStopViewModel thirdToDestination = FindNearestBusStopWithRemove(coordinates.EndPoint, busStops);
@@ -56,44 +65,75 @@ namespace TravelActive.Services
             var paths6 = await GetBiDirectionalBFSAsync(thirdToLocation.Id, firstToDestination.Id);
             var paths7 = await GetBiDirectionalBFSAsync(thirdToLocation.Id, secondToDestination.Id);
             var paths8 = await GetBiDirectionalBFSAsync(thirdToLocation.Id, thirdToDestination.Id);
-            List<Directions> directions = await GetDirectionsBus(coordinates, paths);
-            List<Directions> directions2 = await GetDirectionsBus(coordinates, paths1);
-            List<Directions> directions3 = await GetDirectionsBus(coordinates, paths2);
-            List<Directions> directions4 = await GetDirectionsBus(coordinates, paths3);
-            List<Directions> directions5 = await GetDirectionsBus(coordinates, paths4);
-            List<Directions> directions6 = await GetDirectionsBus(coordinates, paths5);
-            List<Directions> directions7 = await GetDirectionsBus(coordinates, paths6);
-            List<Directions> directions8 = await GetDirectionsBus(coordinates, paths7);
-            List<Directions> directions9 = await GetDirectionsBus(coordinates, paths8);
+            List<BusDirections> directions = await GetDirectionsBus(coordinates, paths);
+            List<BusDirections> directions2 = await GetDirectionsBus(coordinates, paths1);
+            List<BusDirections> directions3 = await GetDirectionsBus(coordinates, paths2);
+            List<BusDirections> directions4 = await GetDirectionsBus(coordinates, paths3);
+            List<BusDirections> directions5 = await GetDirectionsBus(coordinates, paths4);
+            List<BusDirections> directions6 = await GetDirectionsBus(coordinates, paths5);
+            List<BusDirections> directions7 = await GetDirectionsBus(coordinates, paths6);
+            List<BusDirections> directions8 = await GetDirectionsBus(coordinates, paths7);
+            List<BusDirections> directions9 = await GetDirectionsBus(coordinates, paths8);
             return SortDirections(directions, directions2, directions3, directions4, directions5, directions6,
                 directions7, directions8,
                 directions9).Take(3).ToList();
         }
 
-        private async Task<List<Directions>> GetDirectionsBus(Coordinates coordinates, List<List<StopAccessibleViewModel>> paths)
+        private async Task<List<BusDirections>> GetDirectionsBus(Coordinates coordinates, List<List<StopAccessibleViewModel>> paths)
         {
-            List<Directions> toReturn = new List<Directions>();
+            List<BusDirections> busDirectionses = new List<BusDirections>();
             foreach (var path in paths)
             {
-                Directions sum = new Directions();
+                BusDirections current = new BusDirections();
                 var firstStop = path[0];
                 Directions directionsToTheFirstStop = await GetDirectionsByFoot(coordinates.StartingPoint,
                     Context.BusStops.ProjectTo<BusStopViewModel>().First(x => x.Id == firstStop.InitialStopId).LatLng);
-                sum += directionsToTheFirstStop;
+                var debug = new SubBusDirections()
+                {
+                    Method = "foot",
+                    Polyline = directionsToTheFirstStop.Polylines.First(),
+                    Distance = directionsToTheFirstStop.Distance,
+                    Duration = directionsToTheFirstStop.Duration,
+                };
+                current.Directions.Add(debug);
                 foreach (var item in path)
                 {
                     string waypoints = GetWayPoints(item);
                     Directions directionsBetweenStops = await GetDirectionsCar(waypoints);
-                    sum += directionsBetweenStops;
+                    string polyline = "";
+                    foreach (var s in directionsBetweenStops.Polylines)
+                    {
+                        polyline = polyline.PolylineAdd(s);
+                    }
+                    current.Directions.Add(new SubBusDirections()
+                    {
+                        Bus = GetBusName(item.BusId),
+                        Method = "bus",
+                        Distance = directionsBetweenStops.Distance,
+                        Duration = directionsBetweenStops.Duration,
+                        Polyline = polyline
+                    });
                 }
                 var lastStop = path[path.Count - 1];
                 Directions directionsToDestination = await GetDirectionsByFoot(Context.BusStops
                     .ProjectTo<BusStopViewModel>().First(x => x.Id == lastStop.DestStopId).LatLng, coordinates.EndPoint);
-                sum += directionsToDestination;
-                toReturn.Add(sum);
+                current.Directions.Add(new SubBusDirections()
+                {
+                    Polyline = directionsToDestination.Polylines.First(),
+                    Method = "foot",
+                    Distance = directionsToDestination.Distance,
+                    Duration = directionsToDestination.Duration
+                });
+                busDirectionses.Add(current);
             }
 
-            return toReturn;
+            return busDirectionses;
+        }
+
+        private string GetBusName(int? itemBusId)
+        {
+            return Context.Busses.Find(itemBusId).BusName;
+
         }
 
         private string GetWayPoints(StopAccessibleViewModel item)
@@ -186,17 +226,19 @@ namespace TravelActive.Services
                         int current = item;
                         Stack<int> forwardStack = new Stack<int>();
                         Queue<int> backwardQueue = new Queue<int>();
-                        while (forwardPrev.ContainsKey(current))
+                        while (forwardPrev[current] != initialId)
                         {
                             forwardStack.Push(forwardPrev[current]);
                             current = forwardPrev[current];
                         }
+                        forwardStack.Push(initialId);
                         current = item;
-                        while (backwardPrev.ContainsKey(current))
+                        while (backwardPrev[current] != destId)
                         {
                             backwardQueue.Enqueue(backwardPrev[current]);
                             current = backwardPrev[current];
                         }
+                        backwardQueue.Enqueue(destId);
                         int prev = forwardStack.Pop();
                         IEnumerable<StopAccessibility> stopAccesibilities;
                         while (forwardStack.Count != 0)
@@ -232,12 +274,56 @@ namespace TravelActive.Services
 
         private StopAccessibleViewModel Max(IEnumerable<StopAccessibility> stopAccesibilities)
         {
-            //TODO:Add real evaluation algorithm
             StopAccessibility max = stopAccesibilities.First();
+            int initialDelay = Context.StopsOrdered.First(x => x.BusId == max.BusId && x.BusStopId == max.InitialStopId)
+                .Delay;
+            int destInationDelay = Context.StopsOrdered
+                .First(x => x.BusId == max.BusId && x.BusStopId == max.DestStopId).Delay;
+            int secondsDelay = (initialDelay % 100) - (destInationDelay % 100);
+            int minutesDelay = ((initialDelay % 10000) / 100) - ((destInationDelay % 1000) / 100);
+            int hoursDelay = ((initialDelay % 1_000_000) / 100) - ((initialDelay % 1_000_000) / 100);
+            if (secondsDelay < 0)
+            {
+                minutesDelay--;
+                secondsDelay = 60 + secondsDelay;
+            }
+
+            if (minutesDelay < 0)
+            {
+                hoursDelay--;
+                minutesDelay = 60 + minutesDelay;
+            }
+
+            int delay = int.Parse($"{hoursDelay}{minutesDelay}{secondsDelay}");
             foreach (var stopAccessibility in stopAccesibilities)
             {
                 if (stopAccessibility.BusId == null)
                 {
+                    max = stopAccessibility;
+                }
+
+                int currentInitDelay = Context.StopsOrdered.First(x =>
+                    x.BusId == stopAccessibility.BusId && x.BusStopId == stopAccessibility.InitialStopId).Delay;
+                int currentDestDelay = Context.StopsOrdered.First(x =>
+                    x.BusId == stopAccessibility.BusId && x.BusStopId == stopAccessibility.DestStopId).Delay;
+                int currentSecondsDelay = (currentDestDelay % 100) - (currentInitDelay % 100);
+                int currentMinutesDelay = ((currentDestDelay % 10000) / 100) - ((currentInitDelay % 1000) / 100);
+                int currentHoursDelay = ((currentDestDelay % 1_000_000) / 100) - ((currentInitDelay % 1_000_000) / 100);
+                if (currentSecondsDelay < 0)
+                {
+                    currentMinutesDelay--;
+                    currentSecondsDelay = 60 + currentSecondsDelay;
+                }
+
+                if (currentMinutesDelay < 0)
+                {
+                    currentHoursDelay--;
+                    currentMinutesDelay = 60 + currentMinutesDelay;
+                }
+                int currentDelay = int.Parse($"{currentHoursDelay}{currentMinutesDelay}{currentSecondsDelay}");
+                if (currentDelay < delay)
+                {
+                    delay = currentDelay;
                     max = stopAccessibility;
                 }
             }

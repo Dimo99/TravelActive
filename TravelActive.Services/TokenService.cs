@@ -24,12 +24,15 @@ namespace TravelActive.Services
 
         public AccessTokenViewModel GetAccessTokenAsync(User user)
         {
+            var userRolesId = Context.UserRoles.Where(x => x.UserId == user.Id);
+            var userRoles = Context.Roles.Select(x => x.Name).ToArray();
             var payload = new Dictionary<string, object>
             {
                 { Constants.Claims.Id, user.Id },
                 { Constants.Claims.Username, user.UserName },
                 { Constants.Claims.Email, user.Email },
                 { Constants.Claims.EmailConfirmed, user.EmailConfirmed },
+                { Constants.Claims.Roles, userRoles }
             };
             return GetToken(payload);
         }
@@ -44,13 +47,13 @@ namespace TravelActive.Services
             payload.Add(Constants.Claims.Exparation, expires.ToUnixTimeSeconds());
             IJwtAlgorithm algorithm = new HMACSHA256Algorithm();
             IJsonSerializer serializer = new JsonNetSerializer();
-            IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();   
+            IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
             IJwtEncoder encoder = new JwtEncoder(algorithm, serializer, urlEncoder);
             return new AccessTokenViewModel()
             {
                 AccessToken = encoder.Encode(payload, secret),
                 Expires = expires
-        };
+            };
         }
 
         public async Task LogOut(string authorizationHeader)

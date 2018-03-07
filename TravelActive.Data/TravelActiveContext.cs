@@ -1,10 +1,12 @@
-﻿using TravelActive.Models.Entities;
+﻿using System;
+using Microsoft.AspNetCore.Identity;
+using TravelActive.Models.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace TravelActive.Data
 {
-    public class TravelActiveContext : IdentityDbContext<User>
+    public class TravelActiveContext : IdentityDbContext<User, UserRole, string>
     {
         public TravelActiveContext(DbContextOptions<TravelActiveContext> options)
             : base(options)
@@ -27,6 +29,9 @@ namespace TravelActive.Data
                 .HasOne(b => b.User)
                 .WithMany(u => u.BlockedTokens)
                 .HasForeignKey(b => b.UserId);
+            builder
+                .Entity<BusStop>()
+                .HasAlternateKey(bs => bs.StopName);
 
         }
     }

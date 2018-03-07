@@ -38,6 +38,7 @@ namespace TravelActive
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider provider)
         {
+            app.UseMiddleware<MakeResponseBodyReadable>();
             app.UseMiddleware<OptionsMiddleware>();
             app.UseMvc();
         }

@@ -16,17 +16,5 @@ namespace TravelActive.Models.BindingModels
         [Display(Name = "password", Description = "Password")]
         [Secret]
         public string Password { get; set; }
-
-        [Required]
-        [MinLength(1)]
-        [MaxLength(100)]
-        [Display(Name = "firstName", Description = "First name")]
-        public string FirstName { get; set; }
-
-        [Required]
-        [MinLength(1)]
-        [MaxLength(100)]
-        [Display(Name = "lastName", Description = "Last name")]
-        public string LastName { get; set; }
     }
 }

@@ -19,11 +19,22 @@ namespace TravelActive
             using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
-                AddCycleStops(services);
-                InitialDb(services);
+                UserRolesSeed(services);
             }
 
             host.Run();
+        }
+
+        private static void UserRolesSeed(IServiceProvider services)
+        {
+            var context = services.GetService<TravelActiveContext>();
+            if (context.Roles.Any())
+            {
+                return;
+            }
+            UserRole role = new UserRole("Moderator");
+            context.Roles.Add(role);
+            context.SaveChanges();
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
@@ -59,7 +70,9 @@ namespace TravelActive
                 {"Парк Славейков",new LatLng(42.519989,27.451840) },
                 {"С.К. \"Славейков\"",new LatLng(42.522353,27.447063) },
                 {"Парк \"Изгрев\" (Велека)",new LatLng(42.523105,27.461618) },
-                {"\"Двете брези\" (Зорница)" ,new LatLng(42.519392,27.467874)}
+                {"\"Двете брези\" (" +
+                 "Зорница" +
+                 ")" ,new LatLng(42.519392,27.467874)}
             };
             foreach (var stop in bicycleStops)
             {

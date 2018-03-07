@@ -10,7 +10,6 @@ using TravelActive.Models.BindingModels;
 using TravelActive.Models.Entities;
 using TravelActive.Models.ViewModels;
 using TravelActive.Services;
-
 namespace TravelActive.Controllers
 {
     [Authorize]
@@ -42,7 +41,7 @@ namespace TravelActive.Controllers
             };
             return Ok(responese);
         }
-
+        [Authorize(Roles = "Moderator")]
         [HttpPost("cycle", Name = RouteNames.PostCycleStop)]
         public async Task<IActionResult> Cycle([FromBody] BicycleStopBindingModel bicycleStop)
         {
@@ -63,10 +62,18 @@ namespace TravelActive.Controllers
                 return BadRequest(new ApiError(ModelState));
             }
             Coordinates coordinates = mapper.Map<Coordinates>(cbm);
-            List<Directions> directions = await busDirectionsService.BusAlgorithm(coordinates);
-            Collection<Directions> collection = new Collection<Directions>()
+            List<BusDirections> directions = await busDirectionsService.BusAlgorithm(coordinates);
+            List<BusDirectionsView> busDirections = new List<BusDirectionsView>();
+            foreach (var busDirectionse in directions)
             {
-                Value = directions.ToArray()
+                busDirections.Add(new BusDirectionsView()
+                {
+                    SubBusDirectionses = busDirectionse.Directions.ToArray()
+                });
+            }
+            Collection<BusDirectionsView> collection = new Collection<BusDirectionsView>()
+            {
+                Value = busDirections.ToArray()
             };
 
             return Ok(collection);
