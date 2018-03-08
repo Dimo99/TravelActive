@@ -13,7 +13,7 @@ namespace TravelActive.Controllers
     [Route("/[controller]")]
     public class BusesController : Controller
     {
-        private BusService busService;
+        private readonly BusService busService;
 
         public BusesController(BusService busService)
         {
@@ -46,10 +46,36 @@ namespace TravelActive.Controllers
         }
 
         [HttpGet("{busId}", Name = RouteNames.Bus)]
-        public IActionResult Bus(int id)
+        public IActionResult Bus(int busId)
         {
-            ComplexBusViewModel bus = busService.GetBus(id);
+            ComplexBusViewModel bus = busService.GetBus(busId);
             return Ok(bus);
+        }
+        [HttpGet("bussstops/{busId}", Name = RouteNames.StopSequence)]
+        public async Task<IActionResult> BusStopSequence(int busId)
+        {
+            var stops = await busService.GetBusStops(busId);
+            if (stops == null)
+            {
+                return BadRequest(new ApiError("No bus stops info for the bus"));
+            }
+            Collection<BusStopViewModel> busStops = new Collection<BusStopViewModel>()
+            {
+                Self = LinkGenerator.ToCollection(RouteNames.StopSequence, new { parameter = busId }),
+                Value = stops.ToArray()
+            };
+            return Ok(busStops);
+        }
+        [HttpGet("departuretimes/{busId}", Name = RouteNames.DepartureTimes)]
+        public async Task<IActionResult> BusDepartureTimes(int busId)
+        {
+            var departureTimes = await busService.GetBusDepartureTimes(busId);
+            if (departureTimes.Value?.Length == 0)
+            {
+                return BadRequest(new ApiError("No departure times info for the bus"));
+            }
+            departureTimes.Self = LinkGenerator.ToCollection(RouteNames.DepartureTimes, new { busId });
+            return Ok(departureTimes);
         }
 
     }

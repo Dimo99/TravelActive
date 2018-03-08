@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
@@ -22,8 +20,17 @@ namespace TravelActive.Middlewares
             var buffer = new MemoryStream();
             context.Response.Body = buffer;
             await next(context);
+            if (context.Request.Method == "OPTIONS")
+            {
+                return;
+            }
+            context.Response.Headers.Add("Access-Control-Allow-Origin","*");
             buffer.Seek(0, SeekOrigin.Begin);
             var reader = new StreamReader(buffer);
+            if (context.Response.ContentType != "application/json")
+            {
+                context.Response.ContentType = "application/json";
+            }
             string responseBody = await reader.ReadToEndAsync();
             buffer.Dispose();
             context.Response.Body = existingBody;

@@ -1,6 +1,4 @@
-﻿using System;
-using Microsoft.AspNetCore.Identity;
-using TravelActive.Models.Entities;
+﻿using TravelActive.Models.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 

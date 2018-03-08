@@ -9,7 +9,7 @@ namespace TravelActive.Models.ViewModels
         public decimal Duration { get; set; }
         public ICollection<string> Polylines { get; set; } = new List<string>();
 
-        public static Directions operator +(Directions directions,Directions directions2)
+        public static Directions operator +(Directions directions, Directions directions2)
         {
             Directions toReturn = new Directions();
             toReturn.Distance = directions.Distance + directions2.Distance;

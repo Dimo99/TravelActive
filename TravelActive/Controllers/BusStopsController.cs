@@ -24,7 +24,7 @@ namespace TravelActive.Controllers
         [HttpGet(Name = RouteNames.ListBusStops)]
         public async Task<IActionResult> BusStops([FromQuery]SearchOptions<BusStopViewModel, BusStop> searchOptions)
         {
-            var busStops = await busService.GetAllBusStops(searchOptions);
+            var busStops = await busService.GetAllBusStopsAsync(searchOptions);
             var busStopsResponse = new BusStopstResponse()
             {
                 Self = LinkGenerator.ToCollection(RouteNames.ListBusStops),
@@ -39,25 +39,7 @@ namespace TravelActive.Controllers
             return Ok(busStopsResponse);
         }
 
-        [HttpGet("{parameter}", Name = RouteNames.StopSequence)]
-        public async Task<IActionResult> BusStopSequence(string parameter)
-        {
-            if (int.TryParse(parameter, out int busId))
-            {
-                return await BusStop(parameter);
-            }
-            var stops = await busService.GetBusStops(busId);
-            if (stops == null)
-            {
-                return BadRequest(new ApiError("No bus stops info for the bus"));
-            }
-            Collection<BusStopViewModel> busStops = new Collection<BusStopViewModel>()
-            {
-                Self = LinkGenerator.ToCollection(RouteNames.StopSequence, new { parameter = busId }),
-                Value = stops.ToArray()
-            };
-            return Ok(busStops);
-        }
+        
         [Authorize(Roles = "Moderator")]
         [HttpPost(Name = RouteNames.PostBusStop)]
         public IActionResult BusStop([FromBody] BusStopBindingModel busStopBindingModel)
@@ -70,7 +52,7 @@ namespace TravelActive.Controllers
             return Ok();
         }
 
-        [HttpGet("{name}", Name = RouteNames.BusStop)]
+        [HttpGet("{name}",Name = RouteNames.BusStop)]
         public async Task<IActionResult> BusStop(string name)
         {
             var busStop = await busService.GetBusStop(name);
@@ -82,16 +64,6 @@ namespace TravelActive.Controllers
             return Ok(busStop);
         }
 
-        [HttpGet("departuretimes/{busId}", Name = RouteNames.DepartureTimes)]
-        public async Task<IActionResult> BusDepartureTimes(int busId)
-        {
-            var departureTimes = await busService.GetBusDepartureTimes(busId);
-            if (departureTimes.Value?.Length == 0)
-            {
-                return BadRequest(new ApiError("No departure times info for the bus"));
-            }
-            departureTimes.Self = LinkGenerator.ToCollection(RouteNames.DepartureTimes, new { busId });
-            return Ok(departureTimes);
-        }
+        
     }
 }

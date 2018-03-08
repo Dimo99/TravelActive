@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -15,14 +16,8 @@ namespace TravelActive
     {
         public static void Main(string[] args)
         {
-            var host = BuildWebHost(args);
-            using (var scope = host.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                UserRolesSeed(services);
-            }
-
-            host.Run();
+            WebHost.CreateDefaultBuilder().UseStartup<Startup>()
+                            .UseKestrel(options => { options.Listen(IPAddress.Any, 3000); }).Build().Run();
         }
 
         private static void UserRolesSeed(IServiceProvider services)
@@ -147,7 +142,7 @@ namespace TravelActive
             var busB1Izgrev = new Bus() { BusName = "Б1-Изгрев" };
             var busB2Meden = new Bus() { BusName = "Б2-Меден рудник" };
             var busB2Izgrev = new Bus() { BusName = "Б2-Изгрев" };
-            var bus15 = new Bus() { BusName = "15"};
+            var bus15 = new Bus() { BusName = "15" };
             context.Busses.Add(busB1Meden);
             context.Busses.Add(busB1Izgrev);
             context.Busses.Add(busB2Meden);
@@ -243,7 +238,7 @@ namespace TravelActive
             AddBusStopsToBus(context, busB2Meden, busStops, busB2MedenStops);
             AddBusStopsToBus(context, busB2Izgrev, busStops, busB2IzgrevStops);
             AddBusStopsToBus(context, bus15, busStops, bus15Stops);
-        }  
+        }
         private static void AddBusStopsToBus(TravelActiveContext context, Bus bus, Dictionary<string, BusStop> busStops, List<string> busStopsStrings)
         {
             for (int i = 0; i < busStopsStrings.Count; i++)

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using TravelActive.Infrastructure;
 using TravelActive.Middlewares;
 using TravelActive.Services;
