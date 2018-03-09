@@ -24,8 +24,8 @@ namespace TravelActive.Services
 
         public AccessTokenViewModel GetAccessTokenAsync(User user)
         {
-            var userRolesId = Context.UserRoles.Where(x => x.UserId == user.Id);
-            var userRoles = Context.Roles.Select(x => x.Name).ToArray();
+            var userRolesId = Context.UserRoles.Where(x => x.UserId == user.Id).Select(x => x.RoleId).ToList();
+            var userRoles = Context.Roles.Where(x => userRolesId.Contains(x.Id)).Select(x => x.Name).ToArray();
             var payload = new Dictionary<string, object>
             {
                 { Constants.Claims.Id, user.Id },

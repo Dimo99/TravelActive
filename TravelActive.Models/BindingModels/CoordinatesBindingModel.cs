@@ -8,11 +8,9 @@ namespace TravelActive.Models.BindingModels
     {
         [Location]
         [Required]
-        [RegularExpression(Constants.CoordinatesRegex, ErrorMessage = "Invalid point signiture")]
         public string StartingPoint { get; set; }
         [Location]
         [Required]
-        [RegularExpression(Constants.CoordinatesRegex, ErrorMessage = "Invalid point signiture")]
         public string DestinationPoint { get; set; }
     }
 }

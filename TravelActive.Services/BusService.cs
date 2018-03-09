@@ -104,7 +104,7 @@ namespace TravelActive.Services
                         {
                             BusName = busName,
                             Arival = $"{nearest / 100}:{nearest % 100}",
-                            Delay = $"{(sub % 100) + (sub / 100) * 60} minutes"
+                            Delay = $"{(sub % 100) + (sub / 100) * 60} минути"
                         });
                     }
                 }
@@ -142,7 +142,7 @@ namespace TravelActive.Services
         {
             var bus = new Bus() { BusName = busBindingModel.BusName };
             bus = Context.Busses.Add(bus).Entity;
-            await Context.SaveChangesAsync();
+            int result = await Context.SaveChangesAsync();
             foreach (var busStop in busBindingModel.BusStops)
             {
                 StopOrdered stopOrdered = new StopOrdered()
@@ -168,6 +168,13 @@ namespace TravelActive.Services
                     Context.StopsAccessibility.Add(stopAccessibility);
                 }
             }
+            DepartureTime departureTime = new DepartureTime();
+            foreach (var time in busBindingModel.DepartureTimes)
+            {
+                departureTime.Departuretime = int.Parse(string.Join("", time.Split(':'))) * 100;
+                departureTime.BusId = bus.Id;
+                Context.DepartureTimes.Add(departureTime);
+            }
             await Context.SaveChangesAsync();
             return bus.Id;
         }
@@ -178,7 +185,6 @@ namespace TravelActive.Services
             var busStopsViews = mapper.Map<List<BusStopViewModel>>(busStops);
             for (int i = 0; i < busStops.Count; i++)
             {
-                string str = "";
                 int delay = busStops[i].Delay;
                 if (delay < 60)
                 {

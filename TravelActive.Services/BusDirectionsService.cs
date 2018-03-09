@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TravelActive.Common.Extensions;
 using TravelActive.Common.Utilities;
 using TravelActive.Data;
@@ -15,7 +16,7 @@ namespace TravelActive.Services
     public class BusDirectionsService : DirectionsService
     {
 
-        public BusDirectionsService(TravelActiveContext context, IMapper mapper) : base(context, mapper)
+        public BusDirectionsService(TravelActiveContext context, IMapper mapper, IOptions<ApiOptions> options) : base(context, mapper, options)
         {
         }
         private BusStopViewModel FindNearestBusStopWithRemove(LatLng coordinatesStartingPoint, List<BusStopViewModel> busStops)
@@ -43,7 +44,7 @@ namespace TravelActive.Services
         {
             return await Context.BusStops.ProjectTo<BusStopViewModel>().ToListAsync();
         }
-        public async Task<List<BusDirections>> BusAlgorithm(Coordinates coordinates)
+        public async Task<List<List<BusDirections>>> BusAlgorithm(Coordinates coordinates, string startPlace, string endPlace)
         {
             List<BusStopViewModel> busStops = await BusStops();
             BusStopViewModel firstToLocation = FindNearestBusStopWithRemove(coordinates.StartingPoint, busStops);
@@ -65,69 +66,100 @@ namespace TravelActive.Services
             var paths6 = await GetBiDirectionalBFSAsync(thirdToLocation.Id, firstToDestination.Id);
             var paths7 = await GetBiDirectionalBFSAsync(thirdToLocation.Id, secondToDestination.Id);
             var paths8 = await GetBiDirectionalBFSAsync(thirdToLocation.Id, thirdToDestination.Id);
-            List<BusDirections> directions = await GetDirectionsBus(coordinates, paths);
-            List<BusDirections> directions2 = await GetDirectionsBus(coordinates, paths1);
-            List<BusDirections> directions3 = await GetDirectionsBus(coordinates, paths2);
-            List<BusDirections> directions4 = await GetDirectionsBus(coordinates, paths3);
-            List<BusDirections> directions5 = await GetDirectionsBus(coordinates, paths4);
-            List<BusDirections> directions6 = await GetDirectionsBus(coordinates, paths5);
-            List<BusDirections> directions7 = await GetDirectionsBus(coordinates, paths6);
-            List<BusDirections> directions8 = await GetDirectionsBus(coordinates, paths7);
-            List<BusDirections> directions9 = await GetDirectionsBus(coordinates, paths8);
+            var directions = await GetDirectionsBus(coordinates, paths, startPlace, endPlace);
+            var directions2 = await GetDirectionsBus(coordinates, paths1, startPlace, endPlace);
+            var directions3 = await GetDirectionsBus(coordinates, paths2, startPlace, endPlace);
+            var directions4 = await GetDirectionsBus(coordinates, paths3, startPlace, endPlace);
+            var directions5 = await GetDirectionsBus(coordinates, paths4, startPlace, endPlace);
+            var directions6 = await GetDirectionsBus(coordinates, paths5, startPlace, endPlace);
+            var directions7 = await GetDirectionsBus(coordinates, paths6, startPlace, endPlace);
+            var directions8 = await GetDirectionsBus(coordinates, paths7, startPlace, endPlace);
+            var directions9 = await GetDirectionsBus(coordinates, paths8, startPlace, endPlace);
+            if (DistanceBetween(coordinates.StartingPoint, coordinates.EndPoint) < 0.5)
+            {
+                Directions d = await GetDirectionsByFoot(coordinates.StartingPoint, coordinates.EndPoint);
+                BusDirections footDirections = new BusDirections();
+                footDirections.Polyline = d.Polylines.First();
+                footDirections.Distance = d.Distance;
+                footDirections.Duration = d.Duration;
+                footDirections.LocationEnd = coordinates.StartingPoint.ToString();
+                footDirections.LocationStart = coordinates.EndPoint.ToString();
+                footDirections.Method = "foot";
+                return SortDirections(directions, directions2, directions3, directions4, directions5, directions6,
+                    directions7, directions8,
+                    directions9, new List<List<BusDirections>>() { new List<BusDirections>() { footDirections } }).Take(3).ToList();
+            }
             return SortDirections(directions, directions2, directions3, directions4, directions5, directions6,
                 directions7, directions8,
                 directions9).Take(3).ToList();
         }
 
-        private async Task<List<BusDirections>> GetDirectionsBus(Coordinates coordinates, List<List<StopAccessibleViewModel>> paths)
+        private async Task<List<List<BusDirections>>> GetDirectionsBus(Coordinates coordinates, List<List<StopAccessibleViewModel>> paths, string startPlace, string endPlace)
         {
-            List<BusDirections> busDirectionses = new List<BusDirections>();
+            List<List<BusDirections>> busDirectionses = new List<List<BusDirections>>();
+            int index = 0;
             foreach (var path in paths)
             {
-                BusDirections current = new BusDirections();
+                busDirectionses.Add(new List<BusDirections>());
+                var current = busDirectionses[index];
                 var firstStop = path[0];
+                var firstStopName = GetBusStop(firstStop.InitialStopId).StopName;
                 Directions directionsToTheFirstStop = await GetDirectionsByFoot(coordinates.StartingPoint,
                     Context.BusStops.ProjectTo<BusStopViewModel>().First(x => x.Id == firstStop.InitialStopId).LatLng);
-                var debug = new SubBusDirections()
+                var debug = new BusDirections()
                 {
                     Method = "foot",
                     Polyline = directionsToTheFirstStop.Polylines.First(),
                     Distance = directionsToTheFirstStop.Distance,
                     Duration = directionsToTheFirstStop.Duration,
+                    LocationStart = startPlace,
+                    LocationEnd = firstStopName
                 };
-                current.Directions.Add(debug);
+                current.Add(debug);
                 foreach (var item in path)
                 {
                     string waypoints = GetWayPoints(item);
+                    string f = GetBusStop(item.InitialStopId).StopName;
+                    string second = GetBusStop(item.DestStopId).StopName;
                     Directions directionsBetweenStops = await GetDirectionsCar(waypoints);
                     string polyline = "";
                     foreach (var s in directionsBetweenStops.Polylines)
                     {
                         polyline = polyline.PolylineAdd(s);
                     }
-                    current.Directions.Add(new SubBusDirections()
+                    current.Add(new BusDirections()
                     {
                         Bus = GetBusName(item.BusId),
                         Method = "bus",
                         Distance = directionsBetweenStops.Distance,
                         Duration = directionsBetweenStops.Duration,
-                        Polyline = polyline
+                        Polyline = polyline,
+                        LocationStart = f,
+                        LocationEnd = second
                     });
                 }
                 var lastStop = path[path.Count - 1];
+                var lastStopName = GetBusStop(lastStop.DestStopId).StopName;
                 Directions directionsToDestination = await GetDirectionsByFoot(Context.BusStops
                     .ProjectTo<BusStopViewModel>().First(x => x.Id == lastStop.DestStopId).LatLng, coordinates.EndPoint);
-                current.Directions.Add(new SubBusDirections()
+                current.Add(new BusDirections()
                 {
                     Polyline = directionsToDestination.Polylines.First(),
                     Method = "foot",
                     Distance = directionsToDestination.Distance,
-                    Duration = directionsToDestination.Duration
+                    Duration = directionsToDestination.Duration,
+                    LocationStart = lastStopName,
+                    LocationEnd = endPlace
                 });
-                busDirectionses.Add(current);
+                index++;
             }
 
             return busDirectionses;
+        }
+
+        private BusStop GetBusStop(int firstStopInitialStopId)
+        {
+            return Context.BusStops.Find(firstStopInitialStopId);
         }
 
         private string GetBusName(int? itemBusId)

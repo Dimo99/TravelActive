@@ -128,7 +128,7 @@ namespace TravelActive.Infrastructure
         {
             services.AddMvc(options =>
             {
-                options.Filters.Add<LinkRewritingFilter>();
+                
                 options.Filters.Add<JsonExceptionFilter>();
                 //var jsonFormatter = options.OutputFormatters.OfType<JsonOutputFormatter>().Single();
                 //options.OutputFormatters.Remove(jsonFormatter);

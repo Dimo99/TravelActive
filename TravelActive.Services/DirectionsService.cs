@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using TravelActive.Common.Utilities;
 using TravelActive.Data;
@@ -14,11 +15,29 @@ namespace TravelActive.Services
     public abstract class DirectionsService : Service
     {
         protected IMapper mapper;
-        protected DirectionsService(TravelActiveContext context, IMapper mapper) : base(context)
+        private ApiOptions apiOptions;
+        protected DirectionsService(TravelActiveContext context, IMapper mapper,IOptions<ApiOptions> apiOptions) : base(context)
         {
             this.mapper = mapper;
+            this.apiOptions = apiOptions.Value;
         }
 
+        public async Task<string> GetLatLng(string addres)
+        {
+            string url = apiOptions.Url;
+            url += $"?address={addres}&key={apiOptions.Key}";
+            using (WebClient webClient = new WebClient())
+            {
+                string json = await webClient.DownloadStringTaskAsync(url);
+                JObject jObject = JObject.Parse(json);
+                JToken results = jObject["results"].First;
+                JToken geometry = results["geometry"];
+                JToken location = geometry["location"];
+                return $"{location["lat"]},{location["lng"]}";
+
+            }
+
+        }
         protected StopViewModel FindNearestStop(LatLng initialLocation, IEnumerable<StopViewModel> stops)
         {
             StopViewModel minStop = stops.First();
@@ -49,7 +68,7 @@ namespace TravelActive.Services
             dist = dist * 60 * 1.853159616;
             return dist;
         }
-        private static double DistanceBetween(LatLng latLng1, LatLng latLng2)
+        protected static double DistanceBetween(LatLng latLng1, LatLng latLng2)
         {
             return DistanceBetween(latLng1.Latitude, latLng1.Longitude, latLng2.Latitude, latLng2.Longitude);
         }
@@ -85,15 +104,15 @@ namespace TravelActive.Services
 
             return sum;
         }
-        protected List<BusDirections> SortDirections(params List<BusDirections>[] directions)
+        protected List<List<BusDirections>> SortDirections(params List<List<BusDirections>>[] directions)
         {
-            List<BusDirections> combinedDirections = new List<BusDirections>();
+            var combinedDirections = new List<List<BusDirections>>();
             foreach (var item in directions)
             {
                 combinedDirections.AddRange(item);
             }
 
-            return combinedDirections.OrderBy(x => x.Directions.Sum(a => a.Duration)).ToList();
+            return combinedDirections.OrderBy(x=>x.Count).ToList();
 
         }
         public int Compare(Directions first, Directions second)

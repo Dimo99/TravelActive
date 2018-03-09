@@ -24,6 +24,7 @@ namespace TravelActive.Filters
             {
                 error.Message = "A server error occured";
                 error.Detail = context.Exception.Message;
+                error.StackTrace = context.Exception.StackTrace;
             }
             context.Result = new ObjectResult(error)
             {

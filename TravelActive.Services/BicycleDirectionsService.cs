@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TravelActive.Common.Utilities;
 using TravelActive.Data;
 using TravelActive.Models.BindingModels;
@@ -14,7 +15,7 @@ namespace TravelActive.Services
 {
     public class BicycleDirectionsService : DirectionsService
     {
-        public BicycleDirectionsService(TravelActiveContext context, IMapper mapper) : base(context, mapper)
+        public BicycleDirectionsService(TravelActiveContext context, IMapper mapper, IOptions<ApiOptions> options) : base(context, mapper, options)
         {
         }
         private async Task<List<BicycleStopViewModel>> BicycleStops(string city)

@@ -8,6 +8,7 @@ using Api.ION;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Routing;
+using TravelActive.Models.ViewModels;
 
 namespace TravelActive.Filters
 {
@@ -68,7 +69,7 @@ namespace TravelActive.Filters
 
             var arrayProperties = allProperties.Where(p => p.PropertyType.IsArray);
             RewriteLinksInArray(arrayProperties, model, rewriter);
-            var objectProperties = allProperties.Except(linkProperties).Except(arrayProperties);
+            var objectProperties = allProperties.Except(linkProperties).Except(arrayProperties).Where(p=>p.PropertyType != typeof(BusDirections));
             RewriteLinksInNestedObject(objectProperties, model, rewriter);
         }
 

@@ -2,6 +2,7 @@
 using Api.ION;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using TravelActive.Common.Utilities;
 using TravelActive.Models.BindingModels;
 using TravelActive.Models.ViewModels;
@@ -14,7 +15,6 @@ namespace TravelActive.Controllers
     public class BusesController : Controller
     {
         private readonly BusService busService;
-
         public BusesController(BusService busService)
         {
             this.busService = busService;
@@ -35,13 +35,13 @@ namespace TravelActive.Controllers
         }
         [Authorize(Roles = "Moderator")]
         [HttpPost(Name = RouteNames.PostBus)]
-        public IActionResult Bus([FromBody] BusBindingModel busBindingModel)
+        public async Task<IActionResult> Bus([FromBody] BusBindingModel busBindingModel)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var busId = busService.CreateBus(busBindingModel);
+            var busId = await busService.CreateBus(busBindingModel);
             return Ok();
         }
 

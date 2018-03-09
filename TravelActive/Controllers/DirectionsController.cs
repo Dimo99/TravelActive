@@ -5,6 +5,7 @@ using Api.Query;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using TravelActive.Common.Utilities;
 using TravelActive.Models.BindingModels;
 using TravelActive.Models.Entities;
@@ -26,6 +27,7 @@ namespace TravelActive.Controllers
             this.bicycleDirectionsService = bicycleDirectionsService;
             this.busDirectionsService = busDirectionsService;
         }
+
         [HttpGet(Name = RouteNames.DirectionsRoot)]
         public IActionResult Root()
         {
@@ -49,6 +51,8 @@ namespace TravelActive.Controllers
             {
                 return BadRequest(new ApiError(ModelState));
             }
+
+            bicycleStop.CityName = "Бургас";
             await bicycleDirectionsService.AddBicycleStop(bicycleStop);
             // TODO: Come up with something nice
             return Ok();
@@ -61,17 +65,19 @@ namespace TravelActive.Controllers
             {
                 return BadRequest(new ApiError(ModelState));
             }
+
+            string startPlace = cbm.StartingPoint;
+            string endPlace = cbm.DestinationPoint;
+            cbm.StartingPoint = await busDirectionsService.GetLatLng(cbm.StartingPoint);
+            cbm.DestinationPoint = await busDirectionsService.GetLatLng(cbm.DestinationPoint);
             Coordinates coordinates = mapper.Map<Coordinates>(cbm);
-            List<BusDirections> directions = await busDirectionsService.BusAlgorithm(coordinates);
-            List<BusDirectionsView> busDirections = new List<BusDirectionsView>();
-            foreach (var busDirectionse in directions)
+            var directions = await busDirectionsService.BusAlgorithm(coordinates,startPlace,endPlace);
+            List<BusDirections[]> busDirections = new List<BusDirections[]>();
+            foreach (var item in directions)
             {
-                busDirections.Add(new BusDirectionsView()
-                {
-                    SubBusDirectionses = busDirectionse.Directions.ToArray()
-                });
+                busDirections.Add(item.ToArray());
             }
-            Collection<BusDirectionsView> collection = new Collection<BusDirectionsView>()
+            Collection<BusDirections[]> collection = new Collection<BusDirections[]>()
             {
                 Value = busDirections.ToArray()
             };
@@ -86,6 +92,9 @@ namespace TravelActive.Controllers
             {
                 return BadRequest(new ApiError(ModelState));
             }
+
+            cbm.StartingPoint = await bicycleDirectionsService.GetLatLng(cbm.StartingPoint);
+            cbm.DestinationPoint = await bicycleDirectionsService.GetLatLng(cbm.DestinationPoint);
             //TODO : think if this should be done in service
             Coordinates coordinates = mapper.Map<Coordinates>(cbm);
             BicycleStopViewModel nearestBicycleStation =

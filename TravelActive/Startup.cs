@@ -30,6 +30,7 @@ namespace TravelActive
             services.AddDomainServices();
             services.AddAutoMapper();
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection("SMTP"));
+            services.Configure<ApiOptions>(Configuration.GetSection("Api"));
             services.Configure<PagingOptions>(Configuration.GetSection("DefaultPagingOptions"));
             services.AddMvcConfiguration();
             services.AddSingleton<OptionsMiddleware>();

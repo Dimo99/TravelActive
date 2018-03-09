@@ -16,7 +16,6 @@ namespace TravelActive.Models.BindingModels
         [Description("Stop latitude")]
         [RegularExpression(@"^[0-9]+\.[0-9]+$",ErrorMessage = "Latitude should be valid floating point number")]
         public string Latitude { get; set; }
-        [Required]
         [Description("CityName")]
         public string CityName { get; set; }
     }
