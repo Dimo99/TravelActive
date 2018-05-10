@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
@@ -11,15 +10,13 @@ namespace TravelActive.Models.Entities
     public class User : IdentityUser, IHaveCustomMapping
     {
         public Picture ProfilePicture { get; set; }
-        [ForeignKey("ProfilePicture")]
+        [ForeignKey("ProfilePicture")]  
         public int? ProfilePictureId { get; set; }
         public List<BlockedTokens> BlockedTokens { get; set; } = new List<BlockedTokens>();
-        [Range(minimum: 0, maximum: 5)]
-        public int Rating { get; set; }
-
+        
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        
+        public List<Ride> Rides { get; set; } = new List<Ride>();
         public void ConfigureMapping(Profile profile)
         {
             profile.CreateMap<RegisterForm, User>()

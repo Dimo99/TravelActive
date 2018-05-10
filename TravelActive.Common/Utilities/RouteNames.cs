@@ -27,5 +27,8 @@
         public const string ComplexBus = nameof(ComplexBus);
         public const string StopSequence = nameof(StopSequence);
         public const string BusStopsRoot = nameof(BusStopsRoot);
+        public const string RidesForUser = nameof(RidesForUser);
+        public const string ListAllUsers = nameof(ListAllUsers);
+        public const string UserId = nameof(UserId);
     }
 }

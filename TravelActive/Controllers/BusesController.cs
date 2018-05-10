@@ -2,7 +2,6 @@
 using Api.ION;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using TravelActive.Common.Utilities;
 using TravelActive.Models.BindingModels;
 using TravelActive.Models.ViewModels;
@@ -61,7 +60,7 @@ namespace TravelActive.Controllers
             }
             Collection<BusStopViewModel> busStops = new Collection<BusStopViewModel>()
             {
-                Self = LinkGenerator.ToCollection(RouteNames.StopSequence, new { parameter = busId }),
+                Self = LinkGenerator.ToCollection(RouteNames.StopSequence),
                 Value = stops.ToArray()
             };
             return Ok(busStops);

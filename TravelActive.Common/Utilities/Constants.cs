@@ -16,6 +16,8 @@
         public const string BicycleRouteUrl = "http://127.0.0.1:5001/route/v1/bike/";
         public const string FootRouteUrl = "http://127.0.0.1:5002/route/v1/foot/";
         public const string CarRouteUrl = "http://127.0.0.1:5003/route/v1/car/";
+        public const string QrUrl = "http://45.76.33.184:3000/qrcode";
+        public const string QrUrlDevelopment = "http://localhost:3000/qrcode";
         public const string CoordinatesRegex = "^[0-9]+\\.[0-9]+\\,[0-9]+\\.[0-9]+$";
     }
 }

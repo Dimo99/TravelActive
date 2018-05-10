@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
+using TravelActive.Common.Extensions;
 using TravelActive.Common.Utilities;
 using TravelActive.Data;
 using TravelActive.Models.Entities;
@@ -16,7 +17,7 @@ namespace TravelActive.Services
     {
         protected IMapper mapper;
         private ApiOptions apiOptions;
-        protected DirectionsService(TravelActiveContext context, IMapper mapper,IOptions<ApiOptions> apiOptions) : base(context)
+        protected DirectionsService(TravelActiveContext context, IMapper mapper, IOptions<ApiOptions> apiOptions) : base(context)
         {
             this.mapper = mapper;
             this.apiOptions = apiOptions.Value;
@@ -37,6 +38,19 @@ namespace TravelActive.Services
 
             }
 
+        }
+        
+        protected IEnumerable<BusStopViewModel> FindStopsInRadius(LatLng initialLocation, IEnumerable<BusStopViewModel> stops)
+        {
+            double initialLatRad = initialLocation.Latitude.ToRadians();
+            double initialLonRad = initialLocation.Longitude.ToRadians();
+            foreach (var stop in stops)
+            {
+                if (Math.Acos(Math.Sin(initialLatRad) * Math.Sin(stop.LatLng.Latitude.ToRadians()) + Math.Cos(initialLatRad) * Math.Cos(stop.LatLng.Latitude.ToRadians()) * Math.Cos(stop.LatLng.Longitude.ToRadians() - initialLonRad)) * 6371 <= 0.7)
+                {
+                    yield return stop;
+                }
+            }
         }
         protected StopViewModel FindNearestStop(LatLng initialLocation, IEnumerable<StopViewModel> stops)
         {
@@ -104,15 +118,16 @@ namespace TravelActive.Services
 
             return sum;
         }
-        protected List<List<BusDirections>> SortDirections(params List<List<BusDirections>>[] directions)
+        protected List<List<BusDirections>> SortDirections(params List<BusDirections>[] directions)
         {
             var combinedDirections = new List<List<BusDirections>>();
             foreach (var item in directions)
             {
-                combinedDirections.AddRange(item);
+                if (item != null)
+                    combinedDirections.Add(item);
             }
-
-            return combinedDirections.OrderBy(x=>x.Count).ToList();
+            //Should sort it in a better way
+            return combinedDirections.OrderBy(x => x.Count).ToList();
 
         }
         public int Compare(Directions first, Directions second)

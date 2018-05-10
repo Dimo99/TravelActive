@@ -4,9 +4,16 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>false</Optimize>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="CaptchaGen.NetCore" Version="1.0.2" />
-    <PackageReference Include="ZXing.Net" Version="0.16.2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.2.2" />
+    <PackageReference Include="ZXing.Net" Version="0.16.4" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,9 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="JWT">
-      <HintPath>..\..\..\..\.nuget\packages\jwt\3.1.1\lib\netstandard1.3\JWT.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.AspNetCore.Identity">
       <HintPath>..\..\..\..\..\..\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.aspnetcore.identity\2.0.1\lib\netstandard2.0\Microsoft.AspNetCore.Identity.dll</HintPath>
     </Reference>

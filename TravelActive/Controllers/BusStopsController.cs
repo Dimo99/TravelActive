@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Api.ION;
 using Api.Query;
 using Api.Query.Search;
@@ -31,15 +32,15 @@ namespace TravelActive.Controllers
                 Value = busStops.ToArray(),
                 BusStopSequence = LinkGenerator.ToCollection(RouteNames.StopSequence, new { busId = "exampleBusId" }),
                 BusStopForm = FormMetadata.FromModel(new BusStopBindingModel(), LinkGenerator.ToForm(RouteNames.PostBusStop, null, LinkGenerator.PostMethod, Form.CreateRelation)),
-                BusStopByName = LinkGenerator.To(RouteNames.BusStop, new { name = "exampleBusStopName" }),
+                BusStopByName = LinkGenerator.To(RouteNames.BusStop, new { id = "exampleBusStopId" }),
                 DepartureTimes = LinkGenerator.ToCollection(RouteNames.DepartureTimes, new { busId = "exampleBusId" }),
-                BusStopsQueryForm = FormHelper.FromResource<BusStopViewModel>(LinkGenerator.ToForm(RouteNames.ListBusStops,null,LinkGenerator.GetMethod,Form.QueryRelation)),
+                BusStopsQueryForm = FormHelper.FromResource<BusStopViewModel>(LinkGenerator.ToForm(RouteNames.ListBusStops, null, LinkGenerator.GetMethod, Form.QueryRelation)),
 
             };
             return Ok(busStopsResponse);
         }
 
-        
+
         [Authorize(Roles = "Moderator")]
         [HttpPost(Name = RouteNames.PostBusStop)]
         public IActionResult BusStop([FromBody] BusStopBindingModel busStopBindingModel)
@@ -52,18 +53,19 @@ namespace TravelActive.Controllers
             return Ok();
         }
 
-        [HttpGet("{name}",Name = RouteNames.BusStop)]
-        public async Task<IActionResult> BusStop(string name)
+        [HttpGet("{id}", Name = RouteNames.BusStop)]
+        public async Task<IActionResult> BusStop(int id, [FromQuery]string dateTime)
         {
-            var busStop = await busService.GetBusStop(name);
+            DateTime dateTimeObj = DateTime.Parse(dateTime);
+            var busStop = await busService.GetBusStop(id, dateTimeObj);
             if (busStop == null)
             {
-                return BadRequest(new ApiError($"There is no {name} stop in the database"));
+                return BadRequest(new ApiError($"There is no {id} stop in the database"));
             }
-            busStop.Self = LinkGenerator.To(RouteNames.BusStop, new { name = busStop.StopName });
+            busStop.Self = LinkGenerator.To(RouteNames.BusStop, new { id = id, dateTime = dateTime });
             return Ok(busStop);
         }
 
-        
+
     }
 }

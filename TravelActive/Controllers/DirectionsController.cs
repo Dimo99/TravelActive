@@ -5,7 +5,6 @@ using Api.Query;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using TravelActive.Common.Utilities;
 using TravelActive.Models.BindingModels;
 using TravelActive.Models.Entities;
@@ -79,6 +78,7 @@ namespace TravelActive.Controllers
             }
             Collection<BusDirections[]> collection = new Collection<BusDirections[]>()
             {
+                Self = LinkGenerator.ToForm(RouteNames.BusQuery, new {startingPoint = startPlace,destinationPoint = endPlace}, LinkGenerator.GetMethod, Form.QueryRelation),
                 Value = busDirections.ToArray()
             };
 

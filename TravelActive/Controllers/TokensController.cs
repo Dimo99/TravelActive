@@ -26,12 +26,6 @@ namespace TravelActive.Controllers
             this.userManager = userManager;
             this.userService = userService;
         }
-        [Authorize]
-        [HttpGet("validatetoken")]
-        public IActionResult ValidateToken()
-        {
-            return Ok();
-        }
         [HttpGet(Name = RouteNames.TokenRoot)]
         public IActionResult TokenRoot()
         {

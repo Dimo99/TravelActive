@@ -3,7 +3,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
-using Newtonsoft.Json;
+using Microsoft.AspNetCore.Hosting;
+using TravelActive.Common.Utilities;
 using TravelActive.Data;
 using TravelActive.Models.ViewModels;
 using ZXing;
@@ -13,15 +14,15 @@ namespace TravelActive.Services
 {
     public class QrCodeService : Service
     {
-
-        public QrCodeService(TravelActiveContext context) : base(context)
+        private readonly IHostingEnvironment env;
+        public QrCodeService(TravelActiveContext context, IHostingEnvironment env) : base(context)
         {
+            this.env = env;
         }
 
 
-        public PictureViewModel GenerateQrCodeImage(dynamic qrCodeContent)
+        public PictureViewModel GenerateQrCodeImage(QrCodeContent qrCodeContent)
         {
-            var value = JsonConvert.SerializeObject(qrCodeContent);
             var width = 250;
             var height = 250;
             var margin = 0;
@@ -35,7 +36,7 @@ namespace TravelActive.Services
                     Margin = margin
                 }
             };
-            var pixelData = qrCodeWriter.Write(value);
+            var pixelData = qrCodeWriter.Write($"{(env.IsDevelopment() ? Constants.QrUrlDevelopment : Constants.QrUrl)}/traveling/{qrCodeContent.BusId}");
             var picture = new PictureViewModel();
             picture.Name = $"Qr code for {qrCodeContent.BusName}";
             picture.MediaType = "image/jpg";

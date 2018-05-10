@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AutoMapper;
+using TravelActive.Data;
 using TravelActive.Infrastructure;
 using TravelActive.Middlewares;
 using TravelActive.Services;
@@ -34,10 +35,14 @@ namespace TravelActive
             services.Configure<PagingOptions>(Configuration.GetSection("DefaultPagingOptions"));
             services.AddMvcConfiguration();
             services.AddSingleton<OptionsMiddleware>();
+            
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider provider)
         {
+            TravelActiveContext context = provider.GetService<TravelActiveContext>();
+            StaticData.Initialize(context);
+            app.UseMiddleware<CookiesMiddleware>();
             app.UseMiddleware<MakeResponseBodyReadable>();
             app.UseMiddleware<OptionsMiddleware>();
             app.UseMvc();

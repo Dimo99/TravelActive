@@ -15,6 +15,7 @@ namespace TravelActive.Models.ViewModels
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public PartialBusView[] Buses { get; set; }
 
+
         public void ConfigureMapping(Profile profile)
         {
             profile.CreateMap<BusStop, BusStopViewModel>()
@@ -23,12 +24,12 @@ namespace TravelActive.Models.ViewModels
                         new LatLng(double.Parse(src.Latitude), double.Parse(src.Longitude))))
                 .ForMember(dest => dest.Self, 
                     opt => opt.MapFrom(src =>
-                        LinkGenerator.To(RouteNames.BusStop, new { name = src.StopName })));
+                        LinkGenerator.To(RouteNames.BusStop, new { id = src.Id })));
             profile.CreateMap<StopOrdered, BusStopViewModel>()
                 .ForMember(dest => dest.StopName,
                     opt => opt.MapFrom(src => src.BusStop.StopName))
                 .ForMember(dest => dest.Self, 
-                    opt=>opt.MapFrom(src=>LinkGenerator.To(RouteNames.BusStop,new {name = src.BusStop.StopName})));
+                    opt=>opt.MapFrom(src=>LinkGenerator.To(RouteNames.BusStop,new {id = src.Id})));
         }
     }
 }

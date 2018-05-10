@@ -19,6 +19,7 @@ namespace TravelActive.Data
         public DbSet<StopOrdered> StopsOrdered { get; set; }
         public DbSet<StopAccessibility> StopsAccessibility { get; set; }
         public DbSet<Picture> Pictures { get; set; }
+        public DbSet<Ride> Rides { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

@@ -31,7 +31,21 @@ namespace TravelActive.Filters
                 return;
             }
 
+            
             var rewriter = new LinkRewriter(urlHelperFactory.GetUrlHelper(context));
+            if (objectResult.Value is Collection<BusDirections[]>)
+            {
+                var allProperties = objectResult.Value
+                    .GetType()
+                    .GetProperties()
+                    .Where(p => p.CanRead)
+                    .ToArray();
+                var linkProperties = allProperties
+                    .Where(p => p.CanWrite && p.PropertyType == typeof(Link));
+                LinkRewriteProperties(objectResult.Value, rewriter, allProperties, linkProperties);
+                await next();
+                return;
+            }
             RewriteAllLinks(objectResult.Value, rewriter);
             await next();
         }
@@ -50,6 +64,16 @@ namespace TravelActive.Filters
                 .ToArray();
             var linkProperties = allProperties
                 .Where(p => p.CanWrite && p.PropertyType == typeof(Link));
+            LinkRewriteProperties(model, rewriter, allProperties, linkProperties);
+
+            var arrayProperties = allProperties.Where(p => p.PropertyType.IsArray);
+            RewriteLinksInArray(arrayProperties, model, rewriter);
+            var objectProperties = allProperties.Except(linkProperties).Except(arrayProperties).Where(p => p.PropertyType != typeof(BusDirections));
+            RewriteLinksInNestedObject(objectProperties, model, rewriter);
+        }
+
+        private static void LinkRewriteProperties(object model, LinkRewriter rewriter, PropertyInfo[] allProperties, IEnumerable<PropertyInfo> linkProperties)
+        {
             foreach (var linkProperty in linkProperties)
             {
                 var rewritten = rewriter.Rewrite(linkProperty.GetValue(model) as Link);
@@ -66,11 +90,6 @@ namespace TravelActive.Filters
 
                 }
             }
-
-            var arrayProperties = allProperties.Where(p => p.PropertyType.IsArray);
-            RewriteLinksInArray(arrayProperties, model, rewriter);
-            var objectProperties = allProperties.Except(linkProperties).Except(arrayProperties).Where(p=>p.PropertyType != typeof(BusDirections));
-            RewriteLinksInNestedObject(objectProperties, model, rewriter);
         }
 
         private static void RewriteLinksInNestedObject(IEnumerable<PropertyInfo> objectProperties, object model, LinkRewriter rewriter)

@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Api.Query.CustomAttributes.Direction;
-using TravelActive.Common.Utilities;
 
 namespace TravelActive.Models.BindingModels
 {

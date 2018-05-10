@@ -18,7 +18,14 @@ namespace TravelActive
         {
             WebHost.CreateDefaultBuilder().UseStartup<Startup>()
                             .UseKestrel(options => { options.Listen(IPAddress.Any, 3000); }).Build().Run();
+            
         }
+
+       
+        public static IWebHost BuildWebHost(string[] args) =>
+            WebHost.CreateDefaultBuilder(args)
+                .UseStartup<Startup>()
+                .Build();
 
         private static void UserRolesSeed(IServiceProvider services)
         {
@@ -32,10 +39,6 @@ namespace TravelActive
             context.SaveChanges();
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .Build();
         private static void AddCycleStops(IServiceProvider provider)
         {
             var context = provider.GetService<TravelActiveContext>();

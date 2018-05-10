@@ -4,7 +4,9 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using TravelActive.Common.Extensions;
 using TravelActive.Data;
 using TravelActive.Models.BindingModels;
@@ -60,6 +62,18 @@ namespace TravelActive.Services
         public async Task<User> GetUserByEmailAsync(string email)
         {
             return await userManager.FindByEmailAsync(email);
+        }
+
+        public async Task<UserViewModel[]> GetAllUsers()
+        {
+            var users = await Context.Users.ProjectTo<UserViewModel>().ToArrayAsync();
+            return users;
+        }
+
+        public async Task<UserViewModel> GetUserByIdAsync(string userId)
+        {
+            var user = await Context.Users.FindAsync(userId);
+            return Mapper.Map<UserViewModel>(user);
         }
     }
 }

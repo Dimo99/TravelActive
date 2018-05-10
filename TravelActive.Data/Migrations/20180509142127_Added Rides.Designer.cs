@@ -2,14 +2,19 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage.Internal;
 using System;
+using TravelActive.Data;
 
 namespace TravelActive.Data.Migrations
 {
     [DbContext(typeof(TravelActiveContext))]
-    partial class TravelActiveContextModelSnapshot : ModelSnapshot
+    [Migration("20180509142127_Added Rides")]
+    partial class AddedRides
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

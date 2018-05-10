@@ -12,12 +12,12 @@ namespace TravelActive.Models.ViewModels
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string PictureUrl { get; set; }
-        public decimal Rating { get; set; }
+        public Link Rides { get; set; }
         public void ConfigureMapping(Profile profile)
         {
             profile.CreateMap<User, UserViewModel>()
-                .ForMember(uvm => uvm.Rating, opt => opt.MapFrom(u => u.Rating / 100m))
-                .ForMember(uvm => uvm.Self, opt => opt.MapFrom(src => LinkGenerator.To(RouteNames.UsersMe, null)));
+                .ForMember(uvm => uvm.Self, opt => opt.MapFrom(src => LinkGenerator.To(RouteNames.UserId, new { userId = src.Id })))
+                .ForMember(uvm => uvm.Rides, opt => opt.MapFrom(src => LinkGenerator.ToCollection(RouteNames.RidesForUser, new { userId = src.Id })));
         }
     }
 }

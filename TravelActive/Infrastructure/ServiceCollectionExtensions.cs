@@ -4,10 +4,12 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Api.ION;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -130,9 +132,10 @@ namespace TravelActive.Infrastructure
             {
                 
                 options.Filters.Add<JsonExceptionFilter>();
-                //var jsonFormatter = options.OutputFormatters.OfType<JsonOutputFormatter>().Single();
-                //options.OutputFormatters.Remove(jsonFormatter);
-                //options.OutputFormatters.Add(new IonOutputFormater(jsonFormatter));
+                var jsonFormatter = options.OutputFormatters.OfType<JsonOutputFormatter>().Single();
+                options.OutputFormatters.Remove(jsonFormatter);
+                options.OutputFormatters.Add(new IonOutputFormater(jsonFormatter));
+                options.Filters.Add<LinkRewritingFilter>();
             });
             return services;
         }

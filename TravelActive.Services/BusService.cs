@@ -7,6 +7,7 @@ using Api.Query.Search;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using TravelActive.Common.Utilities;
 using TravelActive.Data;
 using TravelActive.Models.BindingModels;
 using TravelActive.Models.Entities;
@@ -21,97 +22,12 @@ namespace TravelActive.Services
         {
             this.mapper = mapper;
         }
-
-
-        private int DelaysAdd(int first, int second)
-        {
-            int minutesFirst = first % 100;
-            int hoursFirst = first / 100;
-            int minutesSecond = second % 100;
-            int hoursSecond = second / 100;
-            int finalMinutes = minutesFirst + minutesSecond;
-            int finalHours = hoursFirst + hoursSecond;
-            if (finalMinutes > 60)
-            {
-                finalHours++;
-                finalMinutes = finalMinutes - 60;
-            }
-
-            if (finalHours >= 24)
-            {
-                finalHours -= 24;
-            }
-
-            return int.Parse($"{finalHours}{finalMinutes}");
-        }
-
-        private int DelaysSubstract(int first, int second)
-        {
-            int firstMinutes = first % 100;
-            int firstHours = first / 100;
-            int secondMinutes = second % 100;
-            int secondHours = second / 100;
-            int finalMinutes = secondMinutes - firstMinutes;
-            int finalHours = secondHours - firstHours;
-            if (finalMinutes < 0)
-            {
-                finalMinutes = 60 + finalMinutes;
-            }
-
-            if (finalHours < 0)
-            {
-                finalHours = 23 + finalHours;
-            }
-
-            return int.Parse($"{finalHours}{finalMinutes}");
-        }
         public async Task<List<BusStopViewModel>> GetAllBusStopsAsync(SearchOptions<BusStopViewModel, BusStop> searchOptions)
         {
             IQueryable<BusStop> query = Context.BusStops;
             query = searchOptions.Apply(query);
             List<BusStop> busStops = await query.ToListAsync();
             List<BusStopViewModel> busStopView = mapper.Map<List<BusStop>, List<BusStopViewModel>>(busStops);
-            List<List<PartialBusView>> list = new List<List<PartialBusView>>(busStopView.Count);
-            foreach (var busStopViewModel in busStopView)
-            {
-                list.Add(new List<PartialBusView>());
-            }
-            for (int i = 0; i < busStops.Count; i++)
-            {
-                var buses = Context.StopsOrdered.Where(x => x.BusStopId == busStops[i].Id).Include(x => x.Bus);
-                foreach (var bus in buses)
-                {
-                    DateTime now = DateTime.Now;
-                    var busName = bus.Bus.BusName;
-                    int delay = bus.Delay / 100;
-                    var departureTimes = Context.DepartureTimes.Where(x => x.BusId == bus.BusId).OrderBy(x => x.Departuretime);
-                    var stopTimes = departureTimes.Select(x => DelaysAdd(x.Departuretime / 100, delay));
-                    int nowInt = int.Parse($"{now.Hour}{now.Minute}");
-                    int nearest = stopTimes.FirstOrDefault(x => x > nowInt);
-                    int sub = DelaysSubstract(nowInt, nearest);
-                    if (nearest == 0)
-                    {
-                        list[i].Add(new PartialBusView()
-                        {
-                            BusName = busName,
-                            Arival = "No information",
-                            Delay = "No information"
-                        });
-                    }
-                    else
-                    {
-                        list[i].Add(new PartialBusView()
-                        {
-                            BusName = busName,
-                            Arival = $"{nearest / 100}:{nearest % 100}",
-                            Delay = $"{(sub % 100) + (sub / 100) * 60} минути"
-                        });
-                    }
-                }
-
-                busStopView[i].Buses = list[i].ToArray();
-            }
-
             return busStopView;
         }
 
@@ -133,9 +49,59 @@ namespace TravelActive.Services
             return Context.Busses.ProjectTo<BusViewModel>().ToListAsync();
         }
 
-        public Task<BusStopViewModel> GetBusStop(string name)
+        public async Task<BusStopViewModel> GetBusStop(int id, DateTime now)
         {
-            return Context.BusStops.ProjectTo<BusStopViewModel>().FirstOrDefaultAsync(x => x.StopName == name);
+            var busStop = await Context.BusStops.ProjectTo<BusStopViewModel>().FirstOrDefaultAsync(x => x.Id == id);
+            var buses = await Context.StopsOrdered.Where(x => x.BusStopId == busStop.Id).Include(x => x.Bus).ToArrayAsync();
+            busStop.Buses = new PartialBusView[buses.Length];
+            for (int i = 0; i < buses.Length; i++)
+            {
+                var busName = buses[i].Bus.BusName;
+                int delay = buses[i].Delay;
+                var departureTimes = Context.DepartureTimes.Where(x => x.BusId == buses[i].BusId).Select(x => x.Departuretime);
+                int smallest = -1;
+                int nowInt = DelaysUtlility.ConvertDateTimeToInt(now);
+                foreach (var departureTime in departureTimes)
+                {
+                    int addition = DelaysUtlility.DelayAddition(delay, departureTime);
+                    if (addition > nowInt)
+                    {
+                        if (smallest == -1)
+                        {
+                            smallest = addition;
+                        }
+                        else
+                        {
+                            if (smallest > addition)
+                            {
+                                smallest = addition;
+                            }
+                        }
+                    }
+                }
+
+                if (smallest == -1)
+                {
+                    busStop.Buses[i] = new PartialBusView()
+                    {
+                        BusName = busName,
+                        Arival = "No information",
+                        Delay = "No information"
+
+                    };
+                }
+                else
+                {
+                    busStop.Buses[i] = new PartialBusView()
+                    {
+                        BusName = busName,
+                        Arival = DelaysUtlility.DelayToStringWithoutSeconds(smallest),
+                        Delay = DelaysUtlility.DelayToInformationString(DelaysUtlility.DelaysSubstract(smallest, nowInt))
+
+                    };
+                }
+            }
+            return busStop;
         }
 
         public async Task<int> CreateBus(BusBindingModel busBindingModel)
@@ -150,7 +116,7 @@ namespace TravelActive.Services
                     BusId = bus.Id,
                     BusStopId = busStop.StopId,
                 };
-                stopOrdered.Delay = int.Parse(string.Join("", busStop.Delay.Split(':')));
+                stopOrdered.Delay = DelaysUtlility.ParseDelay(busStop.Delay, "00:00:00");
                 Context.StopsOrdered.Add(stopOrdered);
             }
             for (int i = 0; i < busBindingModel.BusStops.Length - 1; i++)
@@ -171,7 +137,7 @@ namespace TravelActive.Services
             DepartureTime departureTime = new DepartureTime();
             foreach (var time in busBindingModel.DepartureTimes)
             {
-                departureTime.Departuretime = int.Parse(string.Join("", time.Split(':'))) * 100;
+                departureTime.Departuretime = DelaysUtlility.ParseDelay(time, "00:00");
                 departureTime.BusId = bus.Id;
                 Context.DepartureTimes.Add(departureTime);
             }
@@ -181,25 +147,8 @@ namespace TravelActive.Services
 
         public async Task<List<BusStopViewModel>> GetBusStops(int id)
         {
-            var busStops = await Context.StopsOrdered.Where(x=>x.BusId==id).Include(x => x.BusStop).ToListAsync();
+            var busStops = await Context.StopsOrdered.Where(x => x.BusId == id).Include(x => x.BusStop).ToListAsync();
             var busStopsViews = mapper.Map<List<BusStopViewModel>>(busStops);
-            for (int i = 0; i < busStops.Count; i++)
-            {
-                int delay = busStops[i].Delay;
-                if (delay < 60)
-                {
-                    busStopsViews[i].Delay = $"00:00:{delay:00}";
-                    continue;
-                }
-
-                if (delay < 6000)
-                {
-                    busStopsViews[i].Delay = $"00:{(delay / 100):00}:{(delay % 100):00}";;
-                    continue;
-                }
-
-                busStopsViews[i].Delay = $"{(delay / 10000):00}:{(delay / 100 % 100):00}:{(delay % 100):00}";
-            }
             return busStopsViews;
         }
 
@@ -207,7 +156,8 @@ namespace TravelActive.Services
         {
             var departureTimes = await Context.DepartureTimes
                 .Where(d => d.BusId == id)
-                .Select(x => $"{x.Departuretime.ToString().Substring(0, 2)}:{x.Departuretime.ToString().Substring(2)}")
+                .OrderBy(x => x.Departuretime)
+                .Select(x => DelaysUtlility.DelayToStringWithoutSeconds(x.Departuretime))
                 .ToArrayAsync();
             return new Collection<string>()
             {
