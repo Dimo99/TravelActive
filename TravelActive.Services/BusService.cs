@@ -33,7 +33,17 @@ namespace TravelActive.Services
 
         public void AddBusStop(BusStopBindingModel busStopBindingModel)
         {
+            int cityId = 0;
+            if (double.Parse(busStopBindingModel.Longitude) > 27)
+            {
+                cityId = 1;
+            }
+            else
+            {
+                cityId = 2;
+            }
             BusStop busStop = mapper.Map<BusStop>(busStopBindingModel);
+            busStop.CityId = cityId;
             Context.BusStops.Add(busStop);
             Context.SaveChanges();
         }

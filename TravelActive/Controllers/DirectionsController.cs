@@ -65,12 +65,21 @@ namespace TravelActive.Controllers
                 return BadRequest(new ApiError(ModelState));
             }
 
+            int cityId = 0;
             string startPlace = cbm.StartingPoint;
             string endPlace = cbm.DestinationPoint;
             cbm.StartingPoint = await busDirectionsService.GetLatLng(cbm.StartingPoint);
             cbm.DestinationPoint = await busDirectionsService.GetLatLng(cbm.DestinationPoint);
             Coordinates coordinates = mapper.Map<Coordinates>(cbm);
-            var directions = await busDirectionsService.BusAlgorithm(coordinates,startPlace,endPlace);
+            if (coordinates.StartingPoint.Longitude > 27)
+            {
+                cityId = 1;
+            }
+            else
+            {
+                cityId = 2;
+            }
+            var directions = await busDirectionsService.BusAlgorithm(coordinates,startPlace,endPlace,cityId);
             List<BusDirections[]> busDirections = new List<BusDirections[]>();
             foreach (var item in directions)
             {

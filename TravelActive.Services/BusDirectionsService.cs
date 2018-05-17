@@ -30,14 +30,16 @@ namespace TravelActive.Services
         private async Task<Directions> GetDirectionsCar(string waypoints)
             => await GetDirections($"{Constants.CarRouteUrl}{waypoints}?overview=full");
 
-        private async Task<List<BusStopViewModel>> BusStops()
+        private async Task<List<BusStopViewModel>> BusStops(int cityId)
         {
-            return await Context.BusStops.ProjectTo<BusStopViewModel>().ToListAsync();
+            return await Context.BusStops.Where(x => x.CityId == cityId).ProjectTo<BusStopViewModel>().ToListAsync();
         }
-        public async Task<List<List<BusDirections>>> BusAlgorithm(Coordinates coordinates, string startPlace, string endPlace)
+        public async Task<List<List<BusDirections>>> BusAlgorithm(Coordinates coordinates, string startPlace, string endPlace, int cityId)
         {
+            StaticData.ListStopAccessibilities = Context.StopsAccessibility.Where(x => x.InitialStop.CityId == cityId).ToList();
+            StaticData.ListStopOrdered = Context.StopsOrdered.Where(x => x.BusStop.CityId == cityId).Include(x => x.BusStop).ToList();
             List<BusStopViewModel> toLocation = new List<BusStopViewModel>();
-            List<BusStopViewModel> busStops = await BusStops();
+            List<BusStopViewModel> busStops = await BusStops(cityId);
             toLocation = FindStopsInRadius(coordinates.StartingPoint, busStops).ToList();
             int stopsTaken = 3 - toLocation.Count;
             for (int i = 0; i < stopsTaken; i++)
@@ -55,7 +57,9 @@ namespace TravelActive.Services
             }
             busStops.AddRange(toDestination.Skip(3 - stopsTaken));
             bool tryOnFoot = false;
-            List<List<StopAccessibleViewModel>> paths = new List<List<StopAccessibleViewModel>>();
+            var paths = new List<List<StopAccessibleViewModel>>();
+            List<List<StopAccessibleViewModel>> pathsWithTransfer = new List<List<StopAccessibleViewModel>>();
+            List<List<StopAccessibleViewModel>> directPaths = new List<List<StopAccessibleViewModel>>();
             for (int i = 0; i < toLocation.Count; i++)
             {
                 for (int j = 0; j < toDestination.Count; j++)
@@ -65,10 +69,34 @@ namespace TravelActive.Services
                         tryOnFoot = true;
                         continue;
                     }
-                    paths.Add(GetBiDirectionalBFSAsync(toLocation[i].Id, toDestination[j].Id, coordinates.EndPoint));
+
+                    var result = GetBiDirectionalBFSAsync(toLocation[i].Id, toDestination[j].Id, coordinates.EndPoint);
+                    if (result == null)
+                    {
+                        continue;
+                    }
+                    if (result.Count == 2)
+                    {
+                        pathsWithTransfer.Add(result[0]);
+                        directPaths.Add(result[1]);
+                    }
+                    else
+                    {
+                        if (result[0].Count == 1)
+                        {
+                            directPaths.Add(result[0]);
+                        }
+                        else
+                        {
+                            pathsWithTransfer.Add(result[0]);
+                        }
+                    }
                 }
             }
-            paths = paths.OrderBy(x => x.Count).Take(3).ToList();
+            if (directPaths.Count != 0)
+                paths.Add(BestDirectPath(coordinates.StartingPoint, coordinates.EndPoint, directPaths));
+            if (pathsWithTransfer.Count != 0)
+                paths.Add(BestDirectPath(coordinates.StartingPoint, coordinates.EndPoint, pathsWithTransfer));
             List<List<BusDirections>> busDirections = new List<List<BusDirections>>();
             for (int i = 0; i < paths.Count; i++)
             {
@@ -87,6 +115,40 @@ namespace TravelActive.Services
                 busDirections.Insert(0, new List<BusDirections>() { footDirections });
             }
             return busDirections.ToList();
+        }
+
+        private List<StopAccessibleViewModel> BestDirectPath(LatLng startPoint, LatLng endPoint, List<List<StopAccessibleViewModel>> directPaths)
+        {
+            List<double> timeToInitialStop = new List<double>();
+            List<double> timeToDestinationStop = new List<double>();
+
+            foreach (var path in directPaths)
+            {
+                BusStopViewModel busStopInitial =
+                    Mapper.Map<BusStopViewModel>(Context.BusStops.First(x => x.Id == path[0].InitialStopId));
+                BusStopViewModel busStopDestination =
+                    Mapper.Map<BusStopViewModel>(Context.BusStops.First(x => x.Id == path[path.Count - 1].DestStopId));
+                timeToInitialStop.Add(DistanceBetween(busStopInitial.LatLng, startPoint));
+                timeToDestinationStop.Add(DistanceBetween(busStopDestination.LatLng, endPoint));
+            }
+
+            double min = timeToInitialStop[0] + timeToDestinationStop[0];
+            int minIndex = 0;
+            for (var i = 1; i < timeToInitialStop.Count; i++)
+            {
+                if (min > timeToInitialStop[i] + timeToDestinationStop[i])
+                {
+                    min = timeToInitialStop[i] + timeToDestinationStop[i];
+                    minIndex = i;
+                }
+            }
+
+            return directPaths[minIndex];
+        }
+
+        private int CalcTime(double distanceBetween)
+        {
+            return (int)(distanceBetween / 0.07);
         }
 
 
@@ -187,7 +249,7 @@ namespace TravelActive.Services
         }
         //TODO : Fix the method
         // First learn some graph theory then apply it here
-        private List<StopAccessibleViewModel> GetBiDirectionalBFSAsync(int initialId, int destId, LatLng destination)
+        private List<List<StopAccessibleViewModel>> GetBiDirectionalBFSAsync(int initialId, int destId, LatLng destination)
         {
             var path = mapper.Map<List<StopAccessibleViewModel>>(StaticData.ListStopAccessibilities.
                 Where(s => s.InitialStopId == initialId && s.DestStopId == destId).ToList());
@@ -195,9 +257,12 @@ namespace TravelActive.Services
             var toReturn = new List<List<StopAccessibleViewModel>>();
             if (path.Count != 0)
             {
-                return new List<StopAccessibleViewModel>()
+                return new List<List<StopAccessibleViewModel>>()
                 {
-                    Max(path)
+                    new List<StopAccessibleViewModel>()
+                    {
+                        Max(path)
+                    }
                 };
             }
             HashSet<int> usedInitial = new HashSet<int>();
@@ -210,8 +275,14 @@ namespace TravelActive.Services
             Dictionary<int, int> backwardPrev = new Dictionary<int, int>();
             HashSet<int> forwardMoved = new HashSet<int>();
             HashSet<int> backwardMoved = new HashSet<int>();
+            List<StopAccessibleViewModel> pathForContinueOnFoot = null;
+            int counter = 0;
             while (initialStops.Count != 0 || destinationStops.Count != 0)
             {
+                if (counter == 1)
+                {
+                    break;
+                }
                 var currentInitialId = initialStops.Dequeue();
                 var currentDestId = destinationStops.Dequeue();
                 var possibleGoingId = StaticData.ListStopAccessibilities
@@ -236,35 +307,65 @@ namespace TravelActive.Services
                     backwardMoved.Add(item);
                     backwardPrev[item] = currentDestId;
                 }
-                foreach (var i in possibleGoingId)
+
+                var possibleGoingStops = StaticData.ListStopOrdered
+                    .Where(x => possibleGoingId.Contains(x.BusStopId)).Select(x => x.BusStop).ToList();
+                var nearestStop = FindNearestStop(destination, possibleGoingStops);
+                if (DistanceBetween(LatLng.Parse($"{nearestStop.Latitude},{nearestStop.Longitude}"), destination) < 0.5)
                 {
-                    if (DistanceBetween(Mapper.Map<BusStopViewModel>(Context.BusStops.Find(i)).LatLng, destination) <
-                        0.5)
+                    var current = nearestStop.Id;
+                    var list = new List<StopAccessibleViewModel>();
+                    Stack<int> forwardStack = new Stack<int>();
+                    forwardStack.Push(current);
+                    while (forwardPrev[current] != initialId)
                     {
-                        int current = i;
-                        var list = new List<StopAccessibleViewModel>();
-                        Stack<int> forwardStack = new Stack<int>();
-                        forwardStack.Push(current);
-                        while (forwardPrev[current] != initialId)
-                        {
-                            forwardStack.Push(forwardPrev[current]);
-                            current = forwardPrev[current];
-                        }
-                        forwardStack.Push(initialId);
-                        int prev = forwardStack.Pop();
-                        while (forwardStack.Count != 0)
-                        {
-                            int stopC = forwardStack.Pop();
-                            IEnumerable<StopAccessibleViewModel> stopAccesibilities = 
-                                Mapper.Map<List<StopAccessibleViewModel>>(StaticData.ListStopAccessibilities
-                                .Where(x => x.InitialStopId == prev && x.DestStopId == stopC));
-                            list.Add(Max(stopAccesibilities));
-                            prev = stopC;
-                        }
-                        toReturn.Add(list);
+                        forwardStack.Push(forwardPrev[current]);
+                        current = forwardPrev[current];
                     }
+                    forwardStack.Push(initialId);
+                    int prev = forwardStack.Pop();
+                    while (forwardStack.Count != 0)
+                    {
+                        int stopC = forwardStack.Pop();
+                        IEnumerable<StopAccessibleViewModel> stopAccessible =
+                            Mapper.Map<List<StopAccessibleViewModel>>(StaticData.ListStopAccessibilities
+                                .Where(x => x.InitialStopId == prev && x.DestStopId == stopC));
+                        list.Add(Max(stopAccessible));
+                        prev = stopC;
+                    }
+
+                    pathForContinueOnFoot = list;
                 }
+                //foreach (var i in possibleGoingId)
+                //{
+                //    if (DistanceBetween(Mapper.Map<BusStopViewModel>(Context.BusStops.Find(i)).LatLng, destination) <
+                //        0.5)
+                //    {
+                //        int current = i;
+                //        var list = new List<StopAccessibleViewModel>();
+                //        Stack<int> forwardStack = new Stack<int>();
+                //        forwardStack.Push(current);
+                //        while (forwardPrev[current] != initialId)
+                //        {
+                //            forwardStack.Push(forwardPrev[current]);
+                //            current = forwardPrev[current];
+                //        }
+                //        forwardStack.Push(initialId);
+                //        int prev = forwardStack.Pop();
+                //        while (forwardStack.Count != 0)
+                //        {
+                //            int stopC = forwardStack.Pop();
+                //            IEnumerable<StopAccessibleViewModel> stopAccesibilities = 
+                //                Mapper.Map<List<StopAccessibleViewModel>>(StaticData.ListStopAccessibilities
+                //                .Where(x => x.InitialStopId == prev && x.DestStopId == stopC));
+                //            list.Add(Max(stopAccesibilities));
+                //            prev = stopC;
+                //        }
+                //        temp.Add(list);
+                //    }
+                //}
                 var intersection = forwardMoved.Where(x => backwardMoved.Contains(x)).ToList();
+                counter++;
                 if (intersection.Count > 0)
                 {
                     foreach (var item in intersection)
@@ -316,7 +417,20 @@ namespace TravelActive.Services
                 }
             }
 
-            return BestPath(toReturn);
+            if (pathForContinueOnFoot != null)
+            {
+                if (toReturn.Count == 0)
+                {
+                    return new List<List<StopAccessibleViewModel>>() { pathForContinueOnFoot };
+                }
+                return new List<List<StopAccessibleViewModel>>() { BestPath(toReturn), pathForContinueOnFoot };
+            }
+
+            if (toReturn.Count == 0)
+            {
+                return null;
+            }
+            return new List<List<StopAccessibleViewModel>>() { BestPath(toReturn) };
         }
         //TODO: Improve this function
         private List<StopAccessibleViewModel> BestPath(List<List<StopAccessibleViewModel>> paths)

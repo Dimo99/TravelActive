@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Api.ION;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -35,19 +36,35 @@ namespace TravelActive
             services.Configure<PagingOptions>(Configuration.GetSection("DefaultPagingOptions"));
             services.AddMvcConfiguration();
             services.AddSingleton<OptionsMiddleware>();
-            
+
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider provider)
         {
-            TravelActiveContext context = provider.GetService<TravelActiveContext>();
-            StaticData.Initialize(context);
+            //var context = provider.GetService<TravelActiveContext>();
+            //foreach (var contextBusStop in context.BusStops)
+            //{
+            //    if (contextBusStop.CityId == null || contextBusStop.CityId.Value == 0)
+            //    {
+            //        double d = double.Parse(contextBusStop.Longitude);
+            //        if (d < 27)
+            //        {
+            //            contextBusStop.CityId = 2;
+            //        }
+            //        else
+            //        {
+            //            contextBusStop.CityId = 1;
+            //        }
+            //    }
+            //}
+
+            //context.SaveChanges();
             app.UseMiddleware<CookiesMiddleware>();
             app.UseMiddleware<MakeResponseBodyReadable>();
             app.UseMiddleware<OptionsMiddleware>();
             app.UseMvc();
         }
 
-        
+
     }
 }

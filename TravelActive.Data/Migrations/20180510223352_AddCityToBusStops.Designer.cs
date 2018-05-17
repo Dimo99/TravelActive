@@ -11,9 +11,10 @@ using TravelActive.Data;
 namespace TravelActive.Data.Migrations
 {
     [DbContext(typeof(TravelActiveContext))]
-    partial class TravelActiveContextModelSnapshot : ModelSnapshot
+    [Migration("20180510223352_AddCityToBusStops")]
+    partial class AddCityToBusStops
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -159,7 +160,7 @@ namespace TravelActive.Data.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("CityId");
+                    b.Property<int>("CityId");
 
                     b.Property<string>("Latitude");
 
@@ -430,7 +431,8 @@ namespace TravelActive.Data.Migrations
                 {
                     b.HasOne("TravelActive.Models.Entities.City", "City")
                         .WithMany()
-                        .HasForeignKey("CityId");
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("TravelActive.Models.Entities.DepartureTime", b =>

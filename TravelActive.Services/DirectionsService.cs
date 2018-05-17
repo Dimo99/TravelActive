@@ -52,6 +52,23 @@ namespace TravelActive.Services
                 }
             }
         }
+        protected BusStop FindNearestStop(LatLng initialLocation, IEnumerable<BusStop> stops)
+        {
+            BusStop minStop = stops.First();
+            LatLng stopLatLng = LatLng.Parse($"{minStop.Latitude},{minStop.Longitude}");
+            double minDistance = DistanceBetween(initialLocation, stopLatLng);
+            foreach (var currentStop in stops)
+            {
+                double currentDistance = DistanceBetween(initialLocation, stopLatLng);
+                if (currentDistance < minDistance)
+                {
+                    minStop = currentStop;
+                    minDistance = currentDistance;
+                }
+            }
+
+            return minStop;
+        }
         protected StopViewModel FindNearestStop(LatLng initialLocation, IEnumerable<StopViewModel> stops)
         {
             StopViewModel minStop = stops.First();

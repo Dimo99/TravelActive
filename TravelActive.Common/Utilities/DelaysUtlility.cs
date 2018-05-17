@@ -176,6 +176,10 @@ namespace TravelActive.Common.Utilities
         /// <returns></returns>
         public static int ParseDelay(string delayString, string format)
         {
+            if (delayString == "")
+            {
+                return 0;
+            }
             if (format == "00:00")
             {
                 return (int)(delayString[0] - 48) * 1000 + (int)(delayString[1] - 48) * 100 + (int)(delayString[3] - 48) * 10 + (int)delayString[4];

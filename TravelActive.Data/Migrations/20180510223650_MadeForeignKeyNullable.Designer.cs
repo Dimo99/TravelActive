@@ -11,9 +11,10 @@ using TravelActive.Data;
 namespace TravelActive.Data.Migrations
 {
     [DbContext(typeof(TravelActiveContext))]
-    partial class TravelActiveContextModelSnapshot : ModelSnapshot
+    [Migration("20180510223650_MadeForeignKeyNullable")]
+    partial class MadeForeignKeyNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
